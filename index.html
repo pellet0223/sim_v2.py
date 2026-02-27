@@ -3,127 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL COMMAND DUAL - Ver14.0</title>
+    <title>TACTICAL COMMAND DUAL - Ver15.0</title>
     <style>
         :root {
-            --bg-dark: #050b14; --panel-bg: #0f172a; --panel-border: #1e293b;
-            --cyan: #06b6d4; --red: #ef4444; --green: #10b981; --yellow: #eab308; --blue: #3b82f6;
-            --text-main: #f8fafc; --text-muted: #64748b;
+            --bg-dark: #020617; --panel-bg: #0f172a; --panel-border: #1e293b;
+            --cyan: #22d3ee; --red: #fb7185; --green: #4ade80; --yellow: #fbbf24; --blue: #3b82f6;
+            --text-main: #f1f5f9; --text-muted: #94a3b8;
         }
-        * { box-sizing: border-box; }
-        body { margin: 0; padding: 10px; background: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', Meiryo, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        h1 { text-align: center; margin: 0 0 10px 0; font-size: 20px; color: var(--cyan); text-shadow: 0 0 10px rgba(6,182,212,0.5); letter-spacing: 2px; }
-
-        .top-section { display: flex; gap: 10px; height: 50%; min-height: 350px; margin-bottom: 10px; }
-        .bottom-section { display: flex; gap: 10px; flex: 1; min-height: 0; }
-        .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; overflow: hidden; }
-        .panel-title { font-size: 14px; font-weight: bold; border-bottom: 1px solid var(--panel-border); padding-bottom: 5px; margin-bottom: 10px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
-
-        .setup-panel { flex: 1.2; overflow-y: auto; padding-right: 5px; }
-        .faction-group { background: #020617; border: 1px solid var(--panel-border); border-radius: 4px; margin-bottom: 10px; overflow: hidden; }
-        .faction-summary { padding: 10px; font-weight: bold; color: var(--yellow); background: #1e293b; cursor: pointer; outline: none; border-bottom: 1px solid #000; }
-        .unit-details { background: #0f172a; border-top: 1px solid #000; margin: 5px; border: 1px solid var(--panel-border); border-radius: 4px; }
-        .unit-summary { padding: 8px; cursor: pointer; color: #fff; font-size: 12px; font-weight: bold; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; color: var(--text-muted); margin-bottom: 8px; font-size: 10px; }
+        * { box-sizing: border-box; outline: none; }
+        body { margin: 0; padding: 12px; background: var(--bg-dark); color: var(--text-main); font-family: 'Consolas', 'Meiryo', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        .trait-toggle-panel { background: #1e293b; padding: 8px; border-radius: 4px; margin-bottom: 10px; border: 1px solid var(--cyan); }
-        .toggle-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--cyan); }
-        .switch { position: relative; display: inline-block; width: 30px; height: 16px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 16px; }
-        .slider:before { position: absolute; content: ""; height: 10px; width: 10px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--cyan); }
-        input:checked + .slider:before { transform: translateX(14px); }
+        h1 { text-align: center; margin: 0 0 12px 0; font-size: 18px; color: var(--cyan); text-shadow: 0 0 8px rgba(34,211,238,0.4); letter-spacing: 3px; border-bottom: 1px solid var(--panel-border); padding-bottom: 5px; }
 
-        .action-btns { display: flex; flex-direction: column; gap: 5px; background: #1e293b; padding: 8px; border-radius: 4px; }
-        .btn-row { display: flex; gap: 5px; align-items: center; width: 100%; }
-        button { background: var(--blue); color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 11px; }
-        .btn-a { background: var(--cyan); color: #000; flex: 1; } .btn-b { background: var(--red); color: #fff; flex: 1; }
+        .layout { display: flex; flex: 1; gap: 12px; min-height: 0; }
+        .side-panel { width: 300px; display: flex; flex-direction: column; gap: 12px; }
+        .main-panel { flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
-        /* --- レーダーマップ改善 --- */
-        .map-panel { flex: 2.2; position: relative; display: flex; flex-direction: column; }
-        .battlefield { 
-            flex: 1; display: flex; justify-content: space-between; 
-            background: radial-gradient(circle, #1e293b 1px, transparent 1px), #050b14;
-            background-size: 30px 30px; border: 1px solid #334155; border-radius: 4px; 
-            padding: 10px; overflow-y: auto; position: relative;
-        }
-        .map-zone { display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 4px; width: 23%; z-index: 1; }
-        .map-center { width: 4%; border-left: 1px dashed rgba(239,68,68,0.3); border-right: 1px dashed rgba(6,182,212,0.3); }
+        .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 12px; position: relative; display: flex; flex-direction: column; }
+        .panel-title { font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; border-left: 3px solid var(--cyan); padding-left: 8px; display: flex; justify-content: space-between; }
+
+        /* レーダーマップ刷新 */
+        #battlefield-container { flex: 1.5; min-height: 300px; position: relative; overflow: hidden; background: #000; border: 1px solid #334155; border-radius: 8px; }
+        #attack-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        .battlefield { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-between; padding: 15px; }
+        
+        .map-zone { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); grid-auto-rows: min-content; gap: 6px; width: 22%; align-content: center; }
+        .map-center { width: 4%; border-left: 1px dashed rgba(251,113,133,0.2); border-right: 1px dashed rgba(34,211,238,0.2); }
 
         .map-unit { 
-            background: rgba(15, 23, 42, 0.95); border: 1px solid #fff; padding: 2px; 
-            text-align: center; border-radius: 3px; font-size: 8px; font-weight: bold; 
-            width: 45%; max-width: 70px; min-height: 42px; position: relative; transition: 0.2s;
+            background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.3); padding: 4px; 
+            border-radius: 4px; font-size: 9px; text-align: center; color: #fff;
+            display: flex; flex-direction: column; gap: 2px; transition: all 0.2s; position: relative;
         }
         .map-unit.a { border-color: var(--cyan); color: var(--cyan); }
         .map-unit.b { border-color: var(--red); color: var(--red); }
-        .map-unit.dead { opacity: 0.2; filter: grayscale(1); }
+        .map-unit.dead { opacity: 0.1; transform: scale(0.9); }
+        .map-unit span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
         
-        /* 改善：デュアルステータスバー */
-        .map-bar-container { position: absolute; bottom: 2px; left: 2px; right: 2px; display: flex; flex-direction: column; gap: 1px; }
-        .map-mini-bar { height: 2px; background: #000; border-radius: 1px; overflow: hidden; width: 100%; }
-        .map-fill-hp { height: 100%; background: var(--green); transition: width 0.3s; }
-        .map-fill-morale { height: 100%; background: var(--blue); transition: width 0.3s; }
+        .m-bar { height: 3px; background: #000; border-radius: 1px; width: 100%; overflow: hidden; }
+        .m-fill-hp { height: 100%; background: var(--green); }
+        .m-fill-mor { height: 100%; background: var(--blue); }
 
-        @keyframes anim-atk { 0% { transform: scale(1); border-color: #fff; box-shadow: 0 0 15px #fff; } 100% { transform: scale(1); } }
-        @keyframes anim-def { 0% { background: #9f1239; } 100% { background: rgba(15, 23, 42, 0.95); } }
-        .anim-atk { animation: anim-atk 0.3s; z-index: 10; }
-        .anim-def { animation: anim-def 0.3s; }
+        /* アニメーション */
+        @keyframes pulse-atk { 0% { transform: scale(1); border-color: #fff; } 50% { transform: scale(1.1); border-color: var(--cyan); box-shadow: 0 0 15px var(--cyan); } 100% { transform: scale(1); } }
+        .anim-atk { animation: pulse-atk 0.3s ease-out; z-index: 10; }
 
-        .list-panel { flex: 1; overflow-y: auto; }
-        .log-panel { flex: 1.6; overflow-y: auto; background: #020617; font-family: Consolas, monospace; font-size: 12px; line-height: 1.4; padding: 10px; border: 1px solid var(--panel-border); }
-        .unit-card { background: #0f172a; border-left: 3px solid #475569; padding: 6px; margin-bottom: 6px; border-radius: 4px; font-size: 11px; }
+        /* リスト・ログ */
+        .log-panel { flex: 1; background: #010409; overflow-y: auto; padding: 10px; font-size: 11px; line-height: 1.5; color: #c9d1d9; border: 1px solid #30363d; }
+        .list-area { flex: 1; overflow-y: auto; padding-right: 4px; }
+        .unit-card { background: #161b22; border-radius: 6px; padding: 8px; margin-bottom: 8px; border-left: 4px solid #30363d; font-size: 12px; }
         .unit-card.a { border-left-color: var(--cyan); } .unit-card.b { border-left-color: var(--red); }
-        .bar-wrap { height: 10px; background: #000; border-radius: 2px; margin-top: 3px; position: relative; display: flex; overflow: hidden; }
-        .bar-hp { background: var(--green); } .bar-dead { background: var(--red); } .bar-morale { background: var(--blue); }
-        .bar-text { position: absolute; width: 100%; text-align: center; font-size: 8px; line-height: 10px; font-weight: bold; color: #fff; }
-        .log-turn { color: var(--yellow); font-weight: bold; margin-top: 8px; border-bottom: 1px dashed #334155; }
-        .log-atk { color: #c084fc; } .log-fatal { color: var(--red); font-weight: bold; }
-        .faction-header { background: #1e293b; color: var(--yellow); font-size: 10px; padding: 3px 6px; margin: 8px 0 4px 0; border-left: 2px solid var(--yellow); }
+        
+        .setup-area { overflow-y: auto; flex: 1; }
+        details { background: #161b22; border: 1px solid #30363d; border-radius: 4px; margin-bottom: 6px; }
+        summary { padding: 8px; font-size: 12px; cursor: pointer; color: var(--yellow); }
+        .unit-info-box { padding: 8px; background: #0d1117; font-size: 11px; color: var(--text-muted); }
+        
+        .ctrl-row { display: flex; gap: 5px; margin-top: 8px; }
+        select, input { background: #0d1117; color: #fff; border: 1px solid #30363d; border-radius: 4px; padding: 4px; font-size: 11px; }
+        button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 12px; font-weight: bold; transition: 0.2s; font-family: inherit; }
+        button:hover { opacity: 0.8; }
+        .btn-main { background: var(--green); color: #000; width: 100%; padding: 10px; margin-top: 5px; }
+        
+        .log-turn { color: var(--yellow); font-weight: bold; border-bottom: 1px dashed #334155; margin: 10px 0 5px 0; }
+        .log-route { background: var(--red); color: #fff; padding: 2px 4px; border-radius: 2px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>TACTICAL COMMAND DUAL - Ver 14.0</h1>
+    <h1>TACTICAL COMMAND DUAL Ver15.0</h1>
 
-    <div class="top-section">
-        <div class="panel setup-panel">
-            <div class="panel-title">▼ データベース</div>
-            <div class="trait-toggle-panel">
-                <div class="toggle-row">
-                    <span>労働者の扇動 (革命戦線)</span>
-                    <label class="switch">
+    <div class="layout">
+        <div class="side-panel">
+            <div class="panel" style="flex: 1;">
+                <div class="panel-title">DATABASE</div>
+                <div class="setup-area" id="setup-list"></div>
+                <div class="panel" style="padding: 8px; background: #0d1117; border-color: var(--cyan); margin-top: 10px;">
+                    <div class="toggle-row" style="display: flex; align-items:center; justify-content:space-between; font-size:11px;">
+                        <span>労働者の扇動(革命戦線)</span>
                         <input type="checkbox" id="trait-incite-workers">
-                        <span class="slider"></span>
-                    </label>
+                    </div>
+                </div>
+                <button id="btn-start" class="btn-main" onclick="startBattle()">⚔ MISSION START</button>
+                <div class="ctrl-row">
+                    <button style="background:var(--blue); color:#fff; flex:1;" id="btn-next" onclick="runTurn()" disabled>NEXT TURN</button>
+                    <button style="background:var(--yellow); color:#000; flex:1;" id="btn-auto" onclick="toggleAuto()" disabled>AUTO</button>
+                </div>
+                <button style="background:transparent; border:1px solid var(--red); color:var(--red); margin-top:5px;" onclick="resetGame()">SYSTEM RESET</button>
+            </div>
+        </div>
+
+        <div class="main-panel">
+            <div id="battlefield-container">
+                <canvas id="attack-canvas"></canvas>
+                <div class="battlefield">
+                    <div class="map-zone" id="zone-a-back"></div>
+                    <div class="map-zone" id="zone-a-front"></div>
+                    <div class="map-center"></div>
+                    <div class="map-zone" id="zone-b-front"></div>
+                    <div class="map-zone" id="zone-b-back"></div>
                 </div>
             </div>
-            <div id="setup-list"></div>
-        </div>
-
-        <div class="panel map-panel">
-            <div class="panel-title">📡 レーダーモニター (HP:緑 / 士気:青)</div>
-            <div class="battlefield" id="battlefield">
-                <div class="map-zone" id="zone-a-back"></div>
-                <div class="map-zone" id="zone-a-front"></div>
-                <div class="map-center"></div>
-                <div class="map-zone" id="zone-b-front"></div>
-                <div class="map-zone" id="zone-b-back"></div>
-            </div>
-            <div class="controls" style="display:flex; gap:5px; margin-top:8px; justify-content:center;">
-                <button id="btn-start" onclick="startBattle()" style="background: var(--green); padding:8px 15px;">⚔️ 開始</button>
-                <button id="btn-next" onclick="runTurn()" disabled>⏭ 次T</button>
-                <button id="btn-auto" onclick="toggleAuto()" disabled>⏩ オート</button>
-                <button onclick="resetGame()" style="background:transparent; border:1px solid var(--red); color:var(--red);">🔄 リセット</button>
+            
+            <div style="display:flex; gap:12px; flex: 1.2; min-height:0;">
+                <div class="panel" style="flex:1;">
+                    <div class="panel-title" id="title-a">FORCE A</div>
+                    <div class="list-area" id="list-a"></div>
+                </div>
+                <div class="log-panel" id="log-area"></div>
+                <div class="panel" style="flex:1;">
+                    <div class="panel-title" id="title-b">FORCE B</div>
+                    <div class="list-area" id="list-b"></div>
+                </div>
             </div>
         </div>
-    </div>
-
-    <div class="bottom-section">
-        <div class="panel list-panel" id="panel-a"><div class="panel-title" id="title-a" style="color:var(--cyan)">[A] 攻撃軍</div><div id="list-a"></div></div>
-        <div id="log-area" class="panel log-panel"><div style="color:var(--text-muted)">SYSTEM ONLINE...</div></div>
-        <div class="panel list-panel" id="panel-b"><div class="panel-title" id="title-b" style="color:var(--red)">[B] 防衛軍</div><div id="list-b"></div></div>
     </div>
 
     <script>
@@ -131,12 +124,47 @@
         const roll100 = () => Math.floor(Math.random() * 100) + 1;
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-        // 音声エンジン
+        // --- サウンドエンジン改善 ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(f, t, d, v=0.05) {
-            try { const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type=t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(v, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+d); } catch(e){}
+        function playSfx(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            
+            switch(type) {
+                case 'hit': // 攻撃音
+                    o.type = 'square'; o.frequency.setValueAtTime(150, now);
+                    o.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+                    g.gain.setValueAtTime(0.05, now); g.gain.linearRampToValueAtTime(0, now + 0.1);
+                    break;
+                case 'pierce': // 貫徹攻撃
+                    o.type = 'sawtooth'; o.frequency.setValueAtTime(400, now);
+                    o.frequency.linearRampToValueAtTime(800, now + 0.05);
+                    g.gain.setValueAtTime(0.03, now); g.gain.linearRampToValueAtTime(0, now + 0.15);
+                    break;
+                case 'heal': // 回復和音
+                    const o2 = audioCtx.createOscillator(); const g2 = audioCtx.createGain();
+                    o2.connect(g2); g2.connect(audioCtx.destination);
+                    o.type = 'sine'; o.frequency.setValueAtTime(523, now); // C5
+                    o2.type = 'sine'; o2.frequency.setValueAtTime(659, now); // E5
+                    g.gain.setValueAtTime(0.05, now); g.gain.linearRampToValueAtTime(0, now + 0.3);
+                    g2.gain.setValueAtTime(0.05, now); g2.gain.linearRampToValueAtTime(0, now + 0.3);
+                    o2.start(); o2.stop(now + 0.3);
+                    break;
+                case 'purge': // 粛清（低音）
+                    o.type = 'sawtooth'; o.frequency.setValueAtTime(40, now);
+                    g.gain.setValueAtTime(0.2, now); g.gain.linearRampToValueAtTime(0, now + 0.5);
+                    break;
+                case 'win': // 勝利
+                    o.type = 'triangle'; o.frequency.setValueAtTime(440, now);
+                    [554, 659, 880].forEach((f, i) => {
+                        setTimeout(() => playSfx('heal'), i * 150);
+                    });
+                    break;
+            }
+            o.start(); o.stop(now + 0.5);
         }
-        const sfx = { hit:()=>playSound(150,'square',0.1), heal:()=>playSound(900,'sine',0.2), route:()=>playSound(60,'sawtooth',0.5), win:()=>playSound(500,'sine',0.5), rein:()=>playSound(300,'sine',0.4) };
 
         const DATABASE = {
             "ラルキア国家社会主義人民共和国": {
@@ -166,7 +194,7 @@
                 this.traits = preset.traits || [];
                 this.hpList = new Array(this.size).fill(this.hp);
                 this.statusList = new Array(this.size).fill(0); 
-                this.isRouted = false; this.turnStartDead = 0; 
+                this.isRouted = false;
             }
             getActive() { return this.statusList.filter(s => s === 0).length; }
             getFaint() { return this.statusList.filter(s => s === 1 || s === 2).length; }
@@ -205,24 +233,26 @@
         let teams = { A: [], B: [] };
         let turn = 1; let isBattling = false; let autoMode = false; let unitCounter = 0; let isProcessing = false;
 
+        // --- 初期化 ---
         function initSetup() {
             const list = document.getElementById("setup-list");
             list.innerHTML = "";
             for (let [faction, units] of Object.entries(DATABASE)) {
-                let html = `<details class="faction-group"><summary class="faction-summary">🎌 ${faction}</summary>`;
+                let html = `<details><summary>${faction}</summary><div class="unit-info-box">`;
                 for (let [key, data] of Object.entries(units)) {
-                    let sid = `set-${unitCounter++}`;
-                    html += `<details class="unit-details"><summary class="unit-summary">${key}</summary>
-                        <div class="preset-info">
-                            <div class="stat-grid"><div>兵科: ${data.cat}</div><div>規模: ${data.size}</div><div>士気: ${data.morale}</div><div>装甲: ${data.arm}</div></div>
-                            <div class="action-btns">
-                                <div class="btn-row"><span>装備:</span><select id="eq-${sid}"><option value="none">なし</option><option value="mg">機関銃 (+2D1特殊)</option><option value="sp">塹壕スコップ (+1装甲)</option></select></div>
-                                <div class="btn-row"><span>数:</span><input type="number" id="ct-${sid}" value="1" min="1" max="5" style="width:35px">
-                                <button class="btn-a" onclick="addUnit('${faction}','${key}','${sid}','A')">◀ A</button><button class="btn-b" onclick="addUnit('${faction}','${key}','${sid}','B')">B ▶</button></div>
-                            </div>
-                        </div></details>`;
+                    let sid = `s-${unitCounter++}`;
+                    html += `<div style="margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:5px;">
+                        <div style="font-weight:bold; color:#fff;">${key}</div>
+                        <div class="stat-grid"><div>兵科: ${data.cat}</div><div>士気: ${data.morale}</div><div>装甲: ${data.arm}</div></div>
+                        <div class="ctrl-row">
+                            <select id="eq-${sid}"><option value="none">なし</option><option value="mg">機銃</option><option value="sp">スコップ</option></select>
+                            <input type="number" id="ct-${sid}" value="1" min="1" max="5" style="width:35px">
+                            <button class="btn-a" onclick="addUnit('${faction}','${key}','${sid}','A')">A</button>
+                            <button class="btn-b" onclick="addUnit('${faction}','${key}','${sid}','B')">B</button>
+                        </div>
+                    </div>`;
                 }
-                list.innerHTML += html + `</details>`;
+                list.innerHTML += html + `</div></details>`;
             }
         }
 
@@ -240,59 +270,81 @@
         }
 
         function updateUI() {
-            ["A", "B"].forEach(teamId => {
-                const list = document.getElementById(`list-${teamId.toLowerCase()}`);
-                list.innerHTML = "";
-                let stats = { a:0, f:0, d:0 };
+            ["A", "B"].forEach(tid => {
+                const list = document.getElementById(`list-${tid.toLowerCase()}`);
+                list.innerHTML = ""; let stats = { a:0, f:0, d:0 };
                 let grouped = {};
-                teams[teamId].forEach(u => { if(!grouped[u.affiliation]) grouped[u.affiliation]=[]; grouped[u.affiliation].push(u); });
+                teams[tid].forEach(u => { if(!grouped[u.affiliation]) grouped[u.affiliation]=[]; grouped[u.affiliation].push(u); });
                 for(let [fac, units] of Object.entries(grouped)){
                     list.innerHTML += `<div class="faction-header">${fac}</div>`;
                     units.forEach(u => {
                         let active = u.getActive(), faint = u.getFaint(), dead = u.getDead();
                         stats.a+=active; stats.f+=faint; stats.d+=dead;
                         let hpP = ((active+faint)/u.size)*100, mP = u.max_morale==="/"?100:Math.max(0,(u.morale/u.max_morale)*100);
-                        list.innerHTML += `<div class="unit-card ${teamId.toLowerCase()}" style="${u.isAlive()?'':'opacity:0.5'}">
-                            <div style="display:flex; justify-content:space-between; font-weight:bold;"><span>${u.name}</span><button style="display:${isBattling?'none':'block'}; background:none; color:red; border:none; cursor:pointer;" onclick="removeUnit('${teamId}','${u.id}')">✖</button></div>
-                            <div class="bar-wrap"><div class="bar-hp" style="width:${hpP}%"></div><div class="bar-text">生:${active} / 気:${faint} / 死:${dead}</div></div>
-                            <div class="bar-wrap"><div class="bar-morale" style="width:${mP}%"></div><div class="bar-text">士気: ${u.morale}</div></div>
+                        list.innerHTML += `<div class="unit-card ${tid.toLowerCase()}" style="${u.isAlive()?'':'opacity:0.3'}">
+                            <div style="display:flex; justify-content:space-between;"><span>${u.name}</span><button style="display:${isBattling?'none':'block'}; color:red; background:none;" onclick="removeUnit('${tid}','${u.id}')">✖</button></div>
+                            <div class="bar-wrap"><div class="bar-hp" style="width:${hpP}%"></div><div class="bar-text">生存:${active}</div></div>
+                            <div class="bar-wrap"><div class="bar-morale" style="width:${mP}%"></div><div class="bar-text">士気:${u.morale}</div></div>
                         </div>`;
                     });
                 }
-                document.getElementById(`title-${teamId.toLowerCase()}`).innerHTML = `[${teamId}] ${teamId==="A"?'攻撃':'防衛'} <span style="font-size:9px;">(生:${stats.a} 気:${stats.f} 死:${stats.d})</span>`;
+                document.getElementById(`title-${tid.toLowerCase()}`).innerHTML = `FORCE ${tid} (${stats.a}/${stats.f}/${stats.d})`;
             });
 
-            // マップ描画改善：アイコンの縮小とステータスバー
+            // マップ描画（グリッド自動調整）
             document.querySelectorAll('.map-zone').forEach(z => z.innerHTML='');
             [...teams.A, ...teams.B].forEach(u => {
                 let s = u.team.toLowerCase();
                 let z = (u.category.includes('後援') || u.category.includes('最後衛')) ? `zone-${s}-back` : `zone-${s}-front`;
                 let hpP = ((u.getActive()+u.getFaint())/u.size)*100;
                 let mP = u.max_morale==="/"?100:Math.max(0,(u.morale/u.max_morale)*100);
-                
-                // アイコンサイズの動的調整 (部隊数が多いとより小さく)
-                let unitCount = teams[u.team].length;
-                let fontSize = unitCount > 10 ? '7px' : '8px';
-                
                 document.getElementById(z).innerHTML += `
-                    <div class="map-unit ${s} ${u.isAlive()?'':'dead'}" id="map-${u.id}" style="font-size:${fontSize}">
-                        ${u.name.split(' ')[0]}<br>
-                        <span style="opacity:0.6">${u.getActive()}</span>
-                        <div class="map-bar-container">
-                            <div class="map-mini-bar"><div class="map-fill-hp" style="width:${hpP}%"></div></div>
-                            <div class="map-mini-bar"><div class="map-fill-morale" style="width:${mP}%"></div></div>
-                        </div>
+                    <div class="map-unit ${s} ${u.isAlive()?'':'dead'}" id="map-${u.id}">
+                        <span>${u.name.split(' ')[0]}</span>
+                        <div class="m-bar"><div class="m-fill-hp" style="width:${hpP}%"></div></div>
+                        <div class="m-bar"><div class="m-fill-mor" style="width:${mP}%"></div></div>
                     </div>`;
             });
         }
 
+        // --- 視覚的エフェクト: レーザーポインター ---
+        function drawAttackLine(atkId, tgtId, type) {
+            const canvas = document.getElementById('attack-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+            
+            const el1 = document.getElementById(`map-${atkId}`);
+            const el2 = document.getElementById(`map-${tgtId}`);
+            if(!el1 || !el2) return;
+
+            const rect1 = el1.getBoundingClientRect();
+            const rect2 = el2.getBoundingClientRect();
+            const parent = canvas.getBoundingClientRect();
+
+            const x1 = rect1.left - parent.left + rect1.width/2;
+            const y1 = rect1.top - parent.top + rect1.height/2;
+            const x2 = rect2.left - parent.left + rect2.width/2;
+            const y2 = rect2.top - parent.top + rect2.height/2;
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = type === 'heal' ? 'rgba(74, 222, 128, 0.8)' : 'rgba(251, 113, 133, 0.8)';
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+
+            setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 300);
+        }
+
         function removeUnit(t, id) { teams[t] = teams[t].filter(u => u.id !== id); updateUI(); }
-        function toggleAuto() { autoMode = !autoMode; document.getElementById("btn-auto").innerHTML = autoMode?"⏸ 停止":"⏩ オート"; if(autoMode && !isProcessing) runTurn(); }
+        function toggleAuto() { autoMode = !autoMode; document.getElementById("btn-auto").innerHTML = autoMode?"PAUSE":"AUTO"; if(autoMode && !isProcessing) runTurn(); }
 
         async function runTurn() {
             if(isProcessing) return; isProcessing = true;
             document.getElementById("btn-next").disabled = true;
-            const log = (msg, cls='') => { const a=document.getElementById("log-area"); a.innerHTML+=`<div class="${cls}">${msg}</div>`; a.scrollTop=a.scrollHeight; };
+            const logArea = document.getElementById("log-area");
+            const log = (msg, cls='') => { logArea.innerHTML+=`<div class="${cls}">${msg}</div>`; logArea.scrollTop=logArea.scrollHeight; };
             log(`▼ TURN ${turn} ▼`, 'log-turn');
 
             if (document.getElementById('trait-incite-workers').checked && turn % 2 === 0) {
@@ -300,7 +352,7 @@
                     if (teams[side].some(u => u.affiliation === "全土カルヴェナ革命戦線")) {
                         let name = `第${Math.floor(Math.random()*84)+1}労働者中隊`;
                         teams[side].push(new Unit(name, WORKER_PRESET, "全土カルヴェナ革命戦線", side, `u_i_${unitCounter++}`));
-                        log(`📢【扇動】${side}軍に ${name} 到着！`, 'log-atk'); sfx.rein();
+                        log(`📢 増援: ${name} 到着！`); playSfx('heal');
                     }
                 });
                 updateUI();
@@ -309,7 +361,6 @@
             let all = [...teams.A, ...teams.B];
             all.forEach(u => u.turnStartDead = u.getDead());
 
-            // 修正：重鈍ユニットもカテゴリー順を守る
             let cats = ["特殊部隊", "最後衛部隊", "最前衛部隊", "後援部隊"];
             let actionList = [];
             cats.forEach(c => all.filter(u => u.category === c && !u.traits.includes('重鈍')).forEach(u => actionList.push(u)));
@@ -328,11 +379,18 @@
                 }
                 if(!target) continue;
 
-                const aEl = document.getElementById(`map-${atk.id}`), tEl = document.getElementById(`map-${target.id}`);
-                if(aEl) aEl.classList.add('anim-atk'); if(tEl) tEl.classList.add('anim-def');
-                if(isM) sfx.heal(); else sfx.hit();
-                await sleep(300);
-                if(aEl) aEl.classList.remove('anim-atk'); if(tEl) tEl.classList.remove('anim-def');
+                // 視覚演出
+                const aEl = document.getElementById(`map-${atk.id}`);
+                if(aEl) aEl.classList.add('anim-atk');
+                drawAttackLine(atk.id, target.id, isM ? 'heal' : 'atk');
+                
+                // サウンド演出
+                if(isM) playSfx('heal'); 
+                else if(atk.traits.includes('貫徹')) playSfx('pierce');
+                else playSfx('hit');
+
+                await sleep(350);
+                if(aEl) aEl.classList.remove('anim-atk');
 
                 let rollV = roll(6), type = rollV===1?"特殊":(rollV===6?"無謀":"通常");
                 let [dN, dS] = atk.dice[type==="通常"?"通常攻撃":(type==="特殊"?"特殊攻撃":"無謀な攻撃")];
@@ -347,9 +405,11 @@
                         if(type==="無謀" && atk.takeDamage(Math.floor(d*0.3)).killed) selfK++;
                     }
                 }
+                log(`[${atk.name}] ${type} -> [${target.name}]`);
                 updateUI();
             }
 
+            // ターンエンド
             all.forEach(u => {
                 for(let i=0; i<u.size; i++) if(u.statusList[i]===1) u.statusList[i]=2; else if(u.statusList[i]===2){ u.statusList[i]=-1; u.hpList[i]=0; }
                 if(u.isAlive() && u.applyMoraleDamage(u.getDead()-u.turnStartDead)){
@@ -358,19 +418,19 @@
                         let aliveIds = []; u.statusList.forEach((s,idx)=>{ if(s!==-1) aliveIds.push(idx); });
                         let killC = Math.floor(aliveIds.length/2);
                         for(let i=0; i<killC; i++) { let rIdx = aliveIds.splice(Math.floor(Math.random()*aliveIds.length),1)[0]; u.statusList[rIdx]=-1; u.hpList[rIdx]=0; }
-                        u.max_morale="/"; u.morale="/"; sfx.purge; log(`💥【粛清】${u.name} 再編！`, 'log-fatal');
-                    } else { u.isRouted=true; u.statusList.forEach((s,idx)=>{ if(s>0) u.statusList[idx]=-1; }); sfx.route(); log(`⚠️【敗走】${u.name} 崩壊！`, 'log-fatal'); }
+                        u.max_morale="/"; u.morale="/"; playSfx('purge'); log(`💥【粛清】${u.name} を再編成！`, 'log-route');
+                    } else { u.isRouted=true; u.statusList.forEach((s,idx)=>{ if(s>0) u.statusList[idx]=-1; }); playSfx('route'); log(`⚠️【敗走】${u.name} 崩壊！`, 'log-route'); }
                 }
             });
 
             turn++; updateUI(); isProcessing = false;
             let winA = teams.B.every(u => !u.isAlive()), winB = teams.A.every(u => !u.isAlive());
-            if(winA || winB){ autoMode = false; sfx.win(); log(`🏆 戦闘終了: ${winA?'A軍':'B軍'}勝利！`, 'log-turn'); return; }
+            if(winA || winB){ autoMode = false; playSfx('win'); log(`🏆 終結: ${winA?'A軍':'B軍'}勝利！`, 'log-turn'); return; }
             if(autoMode) setTimeout(runTurn, 400); else document.getElementById("btn-next").disabled = false;
         }
 
         function startBattle(){ if(!teams.A.length||!teams.B.length) return; audioCtx.resume(); isBattling=true; document.getElementById("btn-start").disabled=true; document.getElementById("btn-next").disabled=false; document.getElementById("btn-auto").disabled=false; updateUI(); }
-        function resetGame(){ teams={A:[],B:[]}; turn=1; isBattling=false; autoMode=false; unitCounter=0; isProcessing=false; document.getElementById("btn-start").disabled=false; document.getElementById("btn-next").disabled=true; document.getElementById("btn-auto").innerHTML="⏩ オート"; updateUI(); }
+        function resetGame(){ location.reload(); }
         initSetup();
     </script>
 </body>
