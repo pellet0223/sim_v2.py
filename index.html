@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL COMMAND DUAL - Ver3.0</title>
+    <title>TACTICAL COMMAND DUAL - Ver4.0</title>
     <style>
         :root {
             --bg-dark: #050b14; --panel-bg: #0f172a; --panel-border: #1e293b;
@@ -15,65 +15,86 @@
         h1 { text-align: center; margin: 0 0 10px 0; font-size: 20px; color: var(--cyan); text-shadow: 0 0 10px rgba(6,182,212,0.5); letter-spacing: 2px; }
 
         /* レイアウト */
-        .top-section { display: flex; gap: 10px; height: 35%; min-height: 250px; margin-bottom: 10px; }
+        .top-section { display: flex; gap: 10px; height: 40%; min-height: 280px; margin-bottom: 10px; }
         .bottom-section { display: flex; gap: 10px; flex: 1; min-height: 0; }
         .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; overflow: hidden; }
         .panel-title { font-size: 14px; font-weight: bold; border-bottom: 1px solid var(--panel-border); padding-bottom: 5px; margin-bottom: 10px; color: #fff; }
 
-        /* 編成アコーディオン */
-        .setup-panel { flex: 1; overflow-y: auto; }
-        details { background: #1e293b; border-radius: 4px; margin-bottom: 5px; border: 1px solid var(--panel-border); }
-        summary { padding: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; outline: none; }
-        summary:hover { background: #334155; }
-        .preset-info { padding: 10px; background: #0f172a; border-top: 1px solid var(--panel-border); font-size: 12px; }
+        /* 編成アコーディオン (所属グループ) */
+        .setup-panel { flex: 1.2; overflow-y: auto; padding-right: 5px; }
+        .faction-group { background: #020617; border: 1px solid var(--panel-border); border-radius: 4px; margin-bottom: 10px; overflow: hidden; }
+        .faction-summary { padding: 10px; font-weight: bold; color: var(--yellow); background: #1e293b; cursor: pointer; outline: none; border-bottom: 1px solid #000; }
+        .faction-summary:hover { background: #334155; }
+        
+        .unit-details { background: #0f172a; border-top: 1px solid #000; margin: 5px; border: 1px solid var(--panel-border); border-radius: 4px; }
+        .unit-summary { padding: 8px; cursor: pointer; color: #fff; font-size: 13px; font-weight: bold; }
+        .unit-summary:hover { background: #1e293b; }
+        .preset-info { padding: 10px; background: #020617; border-top: 1px solid var(--panel-border); font-size: 12px; }
         .flavor-text { color: var(--cyan); font-style: italic; margin-bottom: 8px; border-left: 3px solid var(--cyan); padding-left: 8px; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; color: var(--text-muted); margin-bottom: 10px; }
         .action-btns { display: flex; gap: 5px; justify-content: space-between; }
+        
         button { background: var(--blue); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         button:hover { filter: brightness(1.2); }
         button:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
         .btn-a { background: var(--cyan); color: #000; } .btn-b { background: var(--red); }
 
-        /* 戦術マップ */
+        /* 戦術マップ & アニメーション */
         .map-panel { flex: 2; position: relative; display: flex; flex-direction: column; }
-        .battlefield { flex: 1; display: flex; justify-content: space-between; background: repeating-linear-gradient(0deg, #050b14, #050b14 20px, #0a1120 20px, #0a1120 40px); border: 1px solid #334155; border-radius: 4px; position: relative; padding: 10px; overflow: hidden; }
-        .map-zone { display: flex; flex-direction: column; justify-content: center; gap: 5px; width: 20%; }
-        .map-center { width: 10%; border-left: 2px dashed #ef4444; border-right: 2px dashed #06b6d4; opacity: 0.5; }
-        .map-unit { background: #1e293b; border: 1px solid #fff; padding: 5px; text-align: center; border-radius: 4px; font-size: 10px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.3s; }
-        .map-unit.a { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 5px var(--cyan); }
-        .map-unit.b { border-color: var(--red); color: var(--red); box-shadow: 0 0 5px var(--red); }
-        .map-unit.atk { transform: scale(1.1); background: #fff; color: #000; z-index: 10;}
-        .map-unit.def { transform: scale(0.9); background: #9f1239; animation: shake 0.3s; }
+        .battlefield { flex: 1; display: flex; justify-content: space-between; background: repeating-linear-gradient(0deg, #050b14, #050b14 20px, #0a1120 20px, #0a1120 40px); border: 1px solid #334155; border-radius: 4px; padding: 10px; overflow: hidden; }
+        .map-zone { display: flex; flex-direction: column; justify-content: center; gap: 5px; width: 22%; }
+        .map-center { width: 6%; border-left: 2px dashed #ef4444; border-right: 2px dashed #06b6d4; opacity: 0.5; }
+        .map-unit { background: #1e293b; border: 1px solid #fff; padding: 6px; text-align: center; border-radius: 4px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; }
+        .map-unit.a { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 5px rgba(6,182,212,0.3); }
+        .map-unit.b { border-color: var(--red); color: var(--red); box-shadow: 0 0 5px rgba(239,68,68,0.3); }
         .map-unit.dead { opacity: 0.2; border-color: #475569; box-shadow: none; color: #475569; }
-        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 20% { transform: translate(-1px, -2px) rotate(-1deg); } 40% { transform: translate(-3px, 0px) rotate(1deg); } 60% { transform: translate(3px, 2px) rotate(0deg); } 80% { transform: translate(1px, -1px) rotate(1deg); } 100% { transform: translate(0, 0) rotate(0deg); } }
+        
+        /* CSSアニメーション定義 */
+        @keyframes anim-atk {
+            0% { transform: scale(1); background: #1e293b; }
+            50% { transform: scale(1.15); background: #fff; color: #000; box-shadow: 0 0 15px #fff; z-index: 10; }
+            100% { transform: scale(1); }
+        }
+        @keyframes anim-def {
+            0% { transform: translateX(0); background: #9f1239; color: #fff; }
+            20% { transform: translateX(-4px) rotate(-2deg); }
+            40% { transform: translateX(4px) rotate(2deg); }
+            60% { transform: translateX(-4px) rotate(-2deg); }
+            80% { transform: translateX(4px) rotate(2deg); }
+            100% { transform: translateX(0); }
+        }
+        .anim-atk { animation: anim-atk 0.4s ease-out; }
+        .anim-def { animation: anim-def 0.4s ease-out; }
 
         /* リストとログ */
-        .list-panel { flex: 1; overflow-y: auto; }
+        .list-panel { flex: 1; overflow-y: auto; padding-right: 5px; }
         .log-panel { flex: 1.5; overflow-y: auto; background: #020617; font-family: var(--font-mono); font-size: 13px; line-height: 1.5; padding: 10px; border: 1px solid var(--panel-border); }
         
         /* ユニットカード */
         .unit-card { background: #0f172a; border-left: 3px solid #475569; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 12px; }
         .unit-card.a { border-left-color: var(--cyan); } .unit-card.b { border-left-color: var(--red); }
-        .bar-wrap { height: 12px; background: #000; border-radius: 2px; margin-top: 4px; position: relative; display: flex; }
-        .bar-hp { background: var(--green); transition: 0.3s; }
-        .bar-faint { background: var(--yellow); transition: 0.3s; }
-        .bar-dead { background: var(--red); transition: 0.3s; }
-        .bar-morale { background: var(--blue); transition: 0.3s; }
+        .affiliation-tag { font-size: 9px; color: var(--text-muted); display: block; margin-bottom: 2px; }
+        
+        .bar-wrap { height: 12px; background: #000; border-radius: 2px; margin-top: 4px; position: relative; display: flex; overflow: hidden; }
+        .bar-hp { background: var(--green); transition: width 0.3s; }
+        .bar-faint { background: var(--yellow); transition: width 0.3s; }
+        .bar-dead { background: var(--red); transition: width 0.3s; }
+        .bar-morale { background: var(--blue); transition: width 0.3s; }
         .bar-text { position: absolute; width: 100%; text-align: center; font-size: 9px; line-height: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 1px #000; }
 
-        .log-turn { color: var(--yellow); font-weight: bold; margin-top: 10px; border-bottom: 1px dashed #334155; }
+        .log-turn { color: var(--yellow); font-weight: bold; margin-top: 10px; border-bottom: 1px dashed #334155; padding-bottom: 4px; }
         .log-atk { color: #c084fc; } .log-dmg { color: #cbd5e1; } .log-fatal { color: var(--red); font-weight: bold; }
-        .log-route { color: #fff; background: #9f1239; padding: 2px 4px; font-weight: bold; }
+        .log-route { color: #fff; background: #9f1239; padding: 2px 4px; font-weight: bold; border-radius: 2px; display: inline-block; margin-top: 2px; }
         .controls { display: flex; gap: 5px; margin-top: 10px; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <h1>TACTICAL COMMAND DUAL v3.0</h1>
+    <h1>TACTICAL COMMAND DUAL - Ver 4.0</h1>
 
     <div class="top-section">
         <div class="panel setup-panel">
-            <div class="panel-title">▼ 部隊データベース (クリックで詳細)</div>
+            <div class="panel-title">▼ データベース (所属別)</div>
             <div id="setup-list"></div>
         </div>
 
@@ -104,20 +125,27 @@
     <script>
         const roll = (sides) => Math.floor(Math.random() * sides) + 1;
         const roll100 = () => Math.floor(Math.random() * 100) + 1;
+        // 非同期待機用関数（アニメーションの完了を待つ魔法）
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-        // ★ 新機能：フレーバーテキストと詳細データ
-        const PRESETS = {
-            "第13革命パルチザン大隊": { desc: "祖国解放を掲げる民兵大隊。装甲は皆無だが、死を恐れぬ波状攻撃で敵を圧倒する。", size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] },
-            "第22歩兵大隊": { desc: "カルヴェナ帝国の正規歩兵。規律正しく、皇帝への絶対の忠誠を胸に戦線を維持する。", size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
-            "重装甲防衛中隊": { desc: "分厚い装甲服を着込んだ防衛特化部隊。敵の攻撃を弾き返し、じわじわと前線を押し上げる。", size: 100, cat: "最前衛部隊", morale: 120, agi: 5, arm: 3, hp: 20, fail: 30, gen: [1, 3], spc: [1, 4], reck: [1, 5], traits: [] },
-            "後方支援砲兵中隊": { desc: "安全な後方から致命的な砲撃を行う。接近戦には弱いが、戦局を覆す火力を誇る。", size: 100, cat: "後援部隊", morale: 80, agi: 10, arm: 0, hp: 15, fail: 40, gen: [2, 4], spc: [3, 6], reck: [1, 6], traits: [] },
-            "特殊暗殺部隊 '影'": { desc: "闇に紛れて敵将の首を狙う極秘部隊。極めて高い機動力で奇襲を掛ける。", size: 20, cat: "特殊部隊", morale: 150, agi: 80, arm: 1, hp: 25, fail: 10, gen: [2, 6], spc: [3, 6], reck: [1, 10], traits: [] }
+        // ★ 新規：所属（Affiliation）ごとのデータ構造
+        const DATABASE = {
+            "全土カルヴェナ革命戦線": {
+                "第13革命パルチザン大隊": { desc: "祖国解放を掲げる民兵大隊。装甲は皆無だが、死を恐れぬ波状攻撃で敵を圧倒する。", size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] },
+                "後方支援砲兵中隊": { desc: "安全な後方から致命的な砲撃を行う。接近戦には弱いが、戦局を覆す火力を誇る。", size: 100, cat: "後援部隊", morale: 80, agi: 10, arm: 0, hp: 15, fail: 40, gen: [2, 4], spc: [3, 6], reck: [1, 6], traits: [] }
+            },
+            "カルヴェナ帝国": {
+                "第22歩兵大隊": { desc: "カルヴェナ帝国の正規歩兵。規律正しく、皇帝への絶対の忠誠を胸に戦線を維持する。", size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
+                "重装甲防衛中隊": { desc: "分厚い装甲服を着込んだ防衛特化部隊。敵の攻撃を弾き返し、じわじわと前線を押し上げる。", size: 100, cat: "最前衛部隊", morale: 120, agi: 5, arm: 3, hp: 20, fail: 30, gen: [1, 3], spc: [1, 4], reck: [1, 5], traits: [] },
+                "特殊暗殺部隊 '影'": { desc: "闇に紛れて敵将の首を狙う極秘部隊。極めて高い機動力で奇襲を掛ける。", size: 20, cat: "特殊部隊", morale: 150, agi: 80, arm: 1, hp: 25, fail: 10, gen: [2, 6], spc: [3, 6], reck: [1, 10], traits: [] }
+            }
         };
 
         class Unit {
-            constructor(name, preset, team, id) {
-                this.id = id; this.name = name; this.team = team; this.category = preset.cat;
-                this.size = preset.size; this.morale = preset.morale; this.max_morale = preset.morale;
+            constructor(name, preset, affiliation, team, id) {
+                this.id = id; this.name = name; this.affiliation = affiliation; this.team = team; 
+                this.category = preset.cat; this.size = preset.size; 
+                this.morale = preset.morale; this.max_morale = preset.morale;
                 this.agi = preset.agi; this.arm = preset.arm; this.hp = preset.hp; this.fail = preset.fail;
                 this.dice = { "通常攻撃": preset.gen, "特殊攻撃": preset.spc, "無謀な攻撃": preset.reck };
                 this.traits = preset.traits;
@@ -155,55 +183,61 @@
                 return { hit: true, killed: killed };
             }
 
-            // ★ 新機能：士気リワーク（ターン終了時にまとめて判定）
             applyMoraleDamage(deathsThisTurn) {
                 if (this.max_morale === "/" || this.isRouted || deathsThisTurn === 0) return false;
                 
-                // 死亡者数 ＋ 1D20（恐怖判定）で士気がゴリゴリ削れる
                 let baseDmg = deathsThisTurn + roll(20);
-                if (this.traits.includes("皇帝陛下万歳")) baseDmg = Math.floor(baseDmg / 2); // 皇帝万歳は士気ダメ半減
-                if (this.traits.includes("革命万歳") && roll100() < 30) baseDmg = 0; // 革命万歳はたまに士気ダメ無効
+                if (this.traits.includes("皇帝陛下万歳")) baseDmg = Math.floor(baseDmg / 2);
+                if (this.traits.includes("革命万歳") && roll100() < 30) baseDmg = 0;
                 
                 this.morale -= baseDmg;
                 logHTML(`<span class="log-sys"> └ [士気変動] ${this.name}: -${baseDmg} (残:${this.morale})</span>`);
                 
                 if (this.morale <= 0) {
                     this.isRouted = true;
-                    for(let i=0; i<this.size; i++) if(this.statusList[i] > 0) this.statusList[i] = -1; // 気絶者は死亡
-                    return true; // 敗走した
+                    for(let i=0; i<this.size; i++) if(this.statusList[i] > 0) this.statusList[i] = -1;
+                    return true;
                 }
                 return false;
             }
         }
 
         let teams = { "A": [], "B": [] };
-        let turn = 1; let isBattling = false; let autoInterval = null; let unitCounter = 0;
+        let turn = 1; let isBattling = false; let autoMode = false; let unitCounter = 0;
 
         // --- 初期化＆UI更新 ---
         function initSetup() {
             const setupList = document.getElementById("setup-list");
-            for (let [key, data] of Object.entries(PRESETS)) {
-                setupList.innerHTML += `
-                    <details>
-                        <summary>${key} <span style="font-size:10px; color:#64748b;">(詳細)</span></summary>
-                        <div class="preset-info">
-                            <div class="flavor-text">"${data.desc}"</div>
-                            <div class="stat-grid">
-                                <div>[兵科] ${data.cat}</div>
-                                <div>[規模] ${data.size}名</div>
-                                <div>[士気] ${data.morale}</div>
-                                <div>[装甲] ${data.arm} / [機動] ${data.agi}</div>
-                                <div>[HP] ${data.hp} / [失敗率] ${data.fail}%</div>
-                                <div>[特性] ${data.traits.length > 0 ? data.traits.join(',') : 'なし'}</div>
+            for (let [faction, units] of Object.entries(DATABASE)) {
+                let factionHTML = `<details class="faction-group"><summary class="faction-summary">🎌 ${faction}</summary>`;
+                
+                for (let [key, data] of Object.entries(units)) {
+                    // 各ユニットの情報をJSON文字列にしてボタンのonclickに渡す
+                    let safeData = JSON.stringify(data).replace(/"/g, '&quot;');
+                    factionHTML += `
+                        <details class="unit-details">
+                            <summary class="unit-summary">${key}</summary>
+                            <div class="preset-info">
+                                <div class="flavor-text">"${data.desc}"</div>
+                                <div class="stat-grid">
+                                    <div>[兵科] ${data.cat}</div>
+                                    <div>[規模] ${data.size}名</div>
+                                    <div>[士気] ${data.morale}</div>
+                                    <div>[装甲] ${data.arm} / [機動] ${data.agi}</div>
+                                    <div>[HP] ${data.hp} / [失敗率] ${data.fail}%</div>
+                                    <div>[特性] ${data.traits.length > 0 ? data.traits.join(',') : 'なし'}</div>
+                                </div>
+                                <div class="action-btns">
+                                    <input type="number" id="cnt-${key}" value="1" min="1" max="5" style="width:40px;">
+                                    <button class="btn-a" onclick="addUnit('${key}', '${faction}', ${safeData}, 'A')">Aに配備</button>
+                                    <button class="btn-b" onclick="addUnit('${key}', '${faction}', ${safeData}, 'B')">Bに配備</button>
+                                </div>
                             </div>
-                            <div class="action-btns">
-                                <input type="number" id="cnt-${key}" value="1" min="1" max="5" style="width:40px;">
-                                <button class="btn-a" onclick="addUnit('${key}', 'A')">Aに配備</button>
-                                <button class="btn-b" onclick="addUnit('${key}', 'B')">Bに配備</button>
-                            </div>
-                        </div>
-                    </details>
-                `;
+                        </details>
+                    `;
+                }
+                factionHTML += `</details>`;
+                setupList.innerHTML += factionHTML;
             }
         }
 
@@ -213,18 +247,17 @@
             area.scrollTop = area.scrollHeight;
         }
 
-        function addUnit(key, team) {
+        function addUnit(key, faction, data, team) {
             if(isBattling) return;
             let count = parseInt(document.getElementById(`cnt-${key}`).value);
             for(let i=0; i<count; i++) {
                 let id = `u_${team}_${unitCounter++}`;
-                teams[team].push(new Unit(key, PRESETS[key], team, id));
+                teams[team].push(new Unit(key, data, faction, team, id));
             }
             updateUI();
         }
 
         function updateUI() {
-            // リストの更新
             ["A", "B"].forEach(t => {
                 const list = document.getElementById(`list-${t.toLowerCase()}`);
                 list.innerHTML = "";
@@ -236,7 +269,8 @@
                     
                     list.innerHTML += `
                         <div class="unit-card ${t.toLowerCase()}" style="${u.isRouted || d>=u.size ? 'opacity:0.5' : ''}">
-                            <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                            <span class="affiliation-tag">${u.affiliation}</span>
+                            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:4px;">
                                 <span>${u.name}</span><span style="color:${u.isRouted?'var(--red)':'var(--green)'}">${st}</span>
                             </div>
                             <div class="bar-wrap">
@@ -254,18 +288,15 @@
                 });
             });
 
-            // マップの更新 (最前衛は中央寄り、後援は端)
+            // マップの更新 (要素を再生成)
             document.querySelectorAll('.map-zone').forEach(el => el.innerHTML = '');
-            teams.A.forEach(u => {
-                let zone = (u.category === "後援部隊" || u.category === "最後衛部隊") ? "zone-a-back" : "zone-a-front";
-                let cl = u.isAlive() ? "a" : "dead";
-                document.getElementById(zone).innerHTML += `<div class="map-unit ${cl}" id="map-${u.id}">${u.name.replace('A: ','')} <br>(${u.getActive()}名)</div>`;
-            });
-            teams.B.forEach(u => {
-                let zone = (u.category === "後援部隊" || u.category === "最後衛部隊") ? "zone-b-back" : "zone-b-front";
-                let cl = u.isAlive() ? "b" : "dead";
-                document.getElementById(zone).innerHTML += `<div class="map-unit ${cl}" id="map-${u.id}">${u.name.replace('B: ','')} <br>(${u.getActive()}名)</div>`;
-            });
+            const placeOnMap = (u, cl) => {
+                let zone = (u.category === "後援部隊" || u.category === "最後衛部隊") ? `zone-${cl}-back` : `zone-${cl}-front`;
+                let stateCl = u.isAlive() ? cl : "dead";
+                document.getElementById(zone).innerHTML += `<div class="map-unit ${stateCl}" id="map-${u.id}">${u.name} <br>(${u.getActive()}名)</div>`;
+            };
+            teams.A.forEach(u => placeOnMap(u, 'a'));
+            teams.B.forEach(u => placeOnMap(u, 'b'));
         }
 
         // --- バトルロジック ---
@@ -273,14 +304,14 @@
             let enemies = teams[enemyTeam].filter(u => u.isAlive());
             if(!enemies.length) return null;
             let possible = enemies.filter(u => u.category === category);
-            if(!possible.length) return enemies[Math.floor(Math.random() * enemies.length)]; // 超過処理
+            if(!possible.length) return enemies[Math.floor(Math.random() * enemies.length)];
             possible.sort((a,b) => a.agi - b.agi);
             let minAgi = possible[0].agi;
             let candidates = possible.filter(u => u.agi === minAgi);
             return candidates[Math.floor(Math.random() * candidates.length)];
         }
 
-        async function startBattle() {
+        function startBattle() {
             if(!teams.A.length || !teams.B.length) return;
             isBattling = true;
             document.getElementById("btn-start").disabled = true;
@@ -289,19 +320,26 @@
             logHTML(`<div class="log-turn" style="font-size:16px;">⚔️ BATTLE START ⚔️</div>`);
         }
 
-        // マップアニメーション用ヘルパー
-        function flashMapUnit(id, type) {
+        // ★ 完全非同期アニメーション関数
+        async function playAnimation(id, animClass, duration) {
             let el = document.getElementById(`map-${id}`);
-            if(el) {
-                el.classList.add(type);
-                setTimeout(() => el.classList.remove(type), 400);
-            }
+            if(!el) return;
+            // アニメーションを確実にリセットして再適用するトリック
+            el.classList.remove(animClass);
+            void el.offsetWidth; // DOMのリフローを強制
+            el.classList.add(animClass);
+            await sleep(duration); // 指定時間待機
+            el.classList.remove(animClass);
         }
 
-        function runTurn() {
+        // ★ Async/Await を使ったターン進行
+        async function runTurn() {
+            // 連打防止
+            document.getElementById("btn-next").disabled = true;
+            document.getElementById("btn-auto").disabled = true;
+
             logHTML(`<div class="log-turn">▼ TURN ${turn} ▼</div>`);
             
-            // 各部隊のターンの死者を記録する変数をリセット
             let deathsThisTurn = {};
             [...teams.A, ...teams.B].forEach(u => deathsThisTurn[u.id] = 0);
 
@@ -310,16 +348,18 @@
                 for (let side of ["A", "B"]) {
                     let enemySide = side === "A" ? "B" : "A";
                     
-                    teams[side].forEach(atk => {
-                        if (atk.category !== cat || !atk.isAlive()) return;
+                    for (let atk of teams[side]) {
+                        if (atk.category !== cat || !atk.isAlive()) continue;
                         
                         let r = roll100();
                         let tgtCat = r === 1 ? "特殊部隊" : (r === 2 ? "最後衛部隊" : (r <= 13 ? "後援部隊" : "最前衛部隊"));
                         let target = getTarget(enemySide, tgtCat);
-                        if (!target) return;
+                        if (!target) continue;
 
-                        flashMapUnit(atk.id, 'atk');
-                        flashMapUnit(target.id, 'def');
+                        // ★ ここでアニメーションを「待機」する
+                        let p1 = playAnimation(atk.id, 'anim-atk', 400);
+                        let p2 = playAnimation(target.id, 'anim-def', 400);
+                        await Promise.all([p1, p2]);
 
                         let actRoll = roll(6);
                         let atkType = actRoll === 1 ? "特殊攻撃" : (actRoll === 6 ? "無謀な攻撃" : "通常攻撃");
@@ -349,18 +389,19 @@
                         logTxt += `<span class="log-dmg"> └ 有効打: ${hits} / 新たな死者: <span class="log-fatal">${kills}名</span></span>`;
                         if (atkType === "無謀な攻撃") logTxt += `<span class="log-fatal"> | 自軍犠牲: ${selfKills}名</span>`;
                         logHTML(logTxt);
-                    });
+                        
+                        updateUI(); // 攻撃ごとのHPバー更新
+                        await sleep(100); // 連続攻撃の合間に少し間を置く
+                    }
                 }
             }
 
-            // ★ 士気ダメージの適用と敗走チェック
             [...teams.A, ...teams.B].forEach(u => {
                 if(u.applyMoraleDamage(deathsThisTurn[u.id])) {
                     logHTML(`<span class="log-route">⚠️【戦線崩壊】 ${u.name} は恐怖に耐えきれず敗走した！！</span>`);
                 }
             });
 
-            // 気絶進行
             ["A", "B"].forEach(side => {
                 teams[side].forEach(u => {
                     for(let i=0; i<u.size; i++) {
@@ -377,27 +418,29 @@
             let bAlive = teams.B.some(u => u.isAlive());
 
             if (!aAlive || !bAlive) {
-                if(autoInterval) clearInterval(autoInterval);
+                autoMode = false;
                 let winner = aAlive ? "攻撃軍(A)" : (bAlive ? "防衛軍(B)" : "引き分け(両軍全滅)");
                 logHTML(`<div class="log-turn" style="font-size:18px; color:var(--cyan);">🏆 戦闘終了！ 勝者: ${winner} 🏆</div>`);
-                document.getElementById("btn-next").disabled = true;
-                document.getElementById("btn-auto").disabled = true;
                 return false;
+            }
+            
+            // ボタンを元に戻すか、オート継続か
+            if (autoMode) {
+                setTimeout(runTurn, 500);
+            } else {
+                document.getElementById("btn-next").disabled = false;
+                document.getElementById("btn-auto").disabled = false;
             }
             return true;
         }
 
         function runAuto() {
-            document.getElementById("btn-next").disabled = true;
-            document.getElementById("btn-auto").disabled = true;
-            autoInterval = setInterval(() => {
-                if (!runTurn()) clearInterval(autoInterval);
-            }, 500); // マップ演出が見えるように0.5秒間隔
+            autoMode = true;
+            runTurn();
         }
 
         function resetGame() {
-            teams = { "A": [], "B": [] }; turn = 1; isBattling = false; unitCounter = 0;
-            if(autoInterval) clearInterval(autoInterval);
+            teams = { "A": [], "B": [] }; turn = 1; isBattling = false; autoMode = false; unitCounter = 0;
             document.getElementById("btn-start").disabled = false;
             document.getElementById("btn-next").disabled = true;
             document.getElementById("btn-auto").disabled = true;
@@ -405,7 +448,6 @@
             updateUI();
         }
 
-        // 初期化実行
         initSetup();
     </script>
 </body>
