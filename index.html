@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL COMMAND DUAL - Ver8.0</title>
+    <title>TACTICAL COMMAND DUAL - Ver9.0</title>
     <style>
         :root {
             --bg-dark: #050b14; --panel-bg: #0f172a; --panel-border: #1e293b;
@@ -47,7 +47,6 @@
         .btn-del { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 2px 6px; border-radius: 3px; font-size: 10px; cursor: pointer; }
         .btn-del:hover { background: #ef4444; color: #fff; }
 
-        /* 所属ヘッダー（配備後リスト用） */
         .faction-header { background: #1e293b; color: var(--yellow); font-size: 11px; font-weight: bold; padding: 4px 8px; margin: 10px 0 5px 0; border-left: 3px solid var(--yellow); border-radius: 2px; }
 
         .map-panel { flex: 2; position: relative; display: flex; flex-direction: column; }
@@ -89,7 +88,7 @@
 </head>
 <body>
 
-    <h1>TACTICAL COMMAND DUAL - Ver 8.0 (究極版)</h1>
+    <h1>TACTICAL COMMAND DUAL - Ver 9.0 (リアル部隊生成版)</h1>
 
     <div class="top-section">
         <div class="panel setup-panel">
@@ -117,12 +116,12 @@
 
     <div class="bottom-section">
         <div class="panel list-panel" id="panel-a">
-            <div class="panel-title" id="title-a" style="color:var(--cyan)">[A] 攻撃軍 <span style="font-size:11px; color:var(--text-muted);">(総兵力: 0)</span></div>
+            <div class="panel-title" id="title-a" style="color:var(--cyan)">[A] 攻撃軍 <span style="font-size:11px; color:var(--text-muted);">(生存:0 / 気絶:0 / 死者:0)</span></div>
             <div id="list-a"></div>
         </div>
-        <div class="panel log-panel" id="log-area"><div style="color:var(--text-muted)">SYSTEM: 装備システム＆衛生兵AIがオンライン。すべての部隊を正常に読み込みました。</div></div>
+        <div class="panel log-panel" id="log-area"><div style="color:var(--text-muted)">SYSTEM: 配備時に各部隊へ「第1〜84」のランダムなナンバーが発令されます。</div></div>
         <div class="panel list-panel" id="panel-b">
-            <div class="panel-title" id="title-b" style="color:var(--red)">[B] 防衛軍 <span style="font-size:11px; color:var(--text-muted);">(総兵力: 0)</span></div>
+            <div class="panel-title" id="title-b" style="color:var(--red)">[B] 防衛軍 <span style="font-size:11px; color:var(--text-muted);">(生存:0 / 気絶:0 / 死者:0)</span></div>
             <div id="list-b"></div>
         </div>
     </div>
@@ -139,20 +138,21 @@
             "衛生兵": "【救護】攻撃の代わりに味方の気絶者を優先して治療する。ダイス出目の分だけHPを回復し、半分を超えると戦線復帰する。"
         };
 
+        // ★ 変更点: 部隊名に「〇」を追加し、すべてランダムナンバリング対応に
         const DATABASE = {
             "ラルキア国家社会主義人民共和国": {
-                "第31歩兵大隊": { desc: "狂信的な国家社会主義の歩兵大隊。装甲はないが絶え間ない突撃を繰り返す。", size: 600, cat: "最前衛部隊", morale: 50, agi: 30, arm: 0, hp: 10, fail: 40, gen: [1, 1], spc: [1, 3], reck: [1, 3], traits: ["革命万歳"] },
-                "第4政治監査委員中隊": { desc: "味方の敗走を絶対に許さない恐るべき監査委員。敗走部隊の半数を処刑する。", size: 100, cat: "後援部隊", morale: 200, agi: 30, arm: 0, hp: 10, fail: 30, gen: [1, 1], spc: [1, 2], reck: [1, 2], traits: ["革命万歳", "粛清"] },
+                "第〇歩兵大隊": { desc: "狂信的な国家社会主義の歩兵大隊。装甲はないが絶え間ない突撃を繰り返す。", size: 600, cat: "最前衛部隊", morale: 50, agi: 30, arm: 0, hp: 10, fail: 40, gen: [1, 1], spc: [1, 3], reck: [1, 3], traits: ["革命万歳"] },
+                "第〇政治監査委員中隊": { desc: "味方の敗走を絶対に許さない恐るべき監査委員。敗走部隊の半数を処刑する。", size: 100, cat: "後援部隊", morale: 200, agi: 30, arm: 0, hp: 10, fail: 30, gen: [1, 1], spc: [1, 2], reck: [1, 2], traits: ["革命万歳", "粛清"] },
                 "第〇機動装甲中隊": { desc: "高機動と重装甲を兼ね備えた特殊装甲部隊。絶大な火力を誇り敵陣を蹂躙する。", size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 50, gen: [1, 4], spc: [2, 3], reck: [3, 3], traits: ["革命万歳"] },
                 "第〇衛生中隊": { desc: "高い機動力で戦場を駆け回り、倒れた味方を戦線復帰させる装甲救護部隊。", size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 10, gen: [2, 3], spc: [3, 4], reck: [5, 6], traits: ["衛生兵"] }
             },
             "全土カルヴェナ革命戦線": {
-                "第13革命パルチザン大隊": { desc: "祖国解放を掲げる民兵大隊。装甲は皆無だが波状攻撃で敵を圧倒する。", size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] },
-                "後方支援砲兵中隊": { desc: "安全な後方から致命的な砲撃を行う。戦局を覆す火力を誇る。", size: 100, cat: "後援部隊", morale: 80, agi: 10, arm: 0, hp: 15, fail: 40, gen: [2, 4], spc: [3, 6], reck: [1, 6], traits: [] }
+                "第〇革命パルチザン大隊": { desc: "祖国解放を掲げる民兵大隊。装甲は皆無だが波状攻撃で敵を圧倒する。", size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] },
+                "第〇後方支援砲兵中隊": { desc: "安全な後方から致命的な砲撃を行う。戦局を覆す火力を誇る。", size: 100, cat: "後援部隊", morale: 80, agi: 10, arm: 0, hp: 15, fail: 40, gen: [2, 4], spc: [3, 6], reck: [1, 6], traits: [] }
             },
             "カルヴェナ帝国": {
-                "第22歩兵大隊": { desc: "カルヴェナ帝国の正規歩兵。規律正しく、皇帝への絶対の忠誠を胸に戦線を維持する。", size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
-                "重装甲防衛中隊": { desc: "分厚い装甲服を着込んだ防衛特化部隊。敵の攻撃を弾き返し前線を維持する。", size: 100, cat: "最前衛部隊", morale: 120, agi: 5, arm: 3, hp: 20, fail: 30, gen: [1, 3], spc: [1, 4], reck: [1, 5], traits: [] },
+                "第〇正規歩兵大隊": { desc: "カルヴェナ帝国の正規歩兵。規律正しく、皇帝への絶対の忠誠を胸に戦線を維持する。", size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
+                "第〇重装甲防衛中隊": { desc: "分厚い装甲服を着込んだ防衛特化部隊。敵の攻撃を弾き返し前線を維持する。", size: 100, cat: "最前衛部隊", morale: 120, agi: 5, arm: 3, hp: 20, fail: 30, gen: [1, 3], spc: [1, 4], reck: [1, 5], traits: [] },
                 "特殊暗殺部隊 影": { desc: "闇に紛れて敵将の首を狙う極秘部隊。極めて高い機動力で奇襲を掛ける。", size: 20, cat: "特殊部隊", morale: 150, agi: 80, arm: 1, hp: 25, fail: 10, gen: [2, 6], spc: [3, 6], reck: [1, 10], traits: [] }
             }
         };
@@ -240,7 +240,6 @@
                             traitsHtml = `<div class="trait-box"><span style="color:var(--cyan); font-weight:bold;">◆ 特性解説</span><ul>${traitItems}</ul></div>`;
                         }
                         
-                        // エラー回避のため、onclickを後から付与する安全なDOM構築は避け、IDでイベントリスナーを後付けするための仕組みに変更
                         let safeIdStr = `${faction}_${key}`.replace(/[^a-zA-Z0-9]/g, '_') + unitCounter++;
                         
                         factionHTML += `
@@ -309,7 +308,12 @@
 
             for(let i=0; i<count; i++) {
                 let id = `u_${team}_${unitCounter++}`;
-                let unit = new Unit(key, data, faction, team, id);
+                
+                // ★ 変更点: 配備のたびに「〇」を1〜84のランダムな数字に置き換える
+                let rndNum = Math.floor(Math.random() * 84) + 1;
+                let deployedName = key.replace(/〇/g, rndNum);
+
+                let unit = new Unit(deployedName, data, faction, team, id);
 
                 if (equip === "machinegun") {
                     unit.name += " (機関銃)";
@@ -334,9 +338,8 @@
         function renderTeamList(teamId, teamArray) {
             const list = document.getElementById(`list-${teamId.toLowerCase()}`);
             list.innerHTML = "";
-            let teamTotal = 0;
+            let stats = { active: 0, faint: 0, dead: 0 };
             
-            // ★ 所属（Affiliation）ごとにグループ分けして表示
             let grouped = {};
             teamArray.forEach(u => {
                 if(!grouped[u.affiliation]) grouped[u.affiliation] = [];
@@ -348,7 +351,9 @@
                 
                 units.forEach(u => {
                     let a = u.getActive(), f = u.getFaint(), d = u.getDead();
-                    teamTotal += a; 
+                    stats.active += a; 
+                    stats.faint += f;
+                    stats.dead += d;
                     
                     let aPct = (a/u.size)*100, fPct = (f/u.size)*100, dPct = (d/u.size)*100;
                     let mPct = u.max_morale === "/" ? 100 : Math.max(0, (u.morale/u.max_morale)*100);
@@ -377,21 +382,24 @@
                     `;
                 });
             }
-            return teamTotal;
+            return stats;
         }
 
         function updateUI() {
-            let totalA = renderTeamList("A", teams.A);
-            let totalB = renderTeamList("B", teams.B);
+            // ★ 変更点: 生存者・気絶者・死者の総合計を表示
+            let statsA = renderTeamList("A", teams.A);
+            let statsB = renderTeamList("B", teams.B);
 
-            document.getElementById("title-a").innerHTML = `[A] 攻撃軍 <span style="font-size:11px; color:var(--text-muted);">(総生存者: ${totalA}名)</span>`;
-            document.getElementById("title-b").innerHTML = `[B] 防衛軍 <span style="font-size:11px; color:var(--text-muted);">(総生存者: ${totalB}名)</span>`;
+            document.getElementById("title-a").innerHTML = `[A] 攻撃軍 <span style="font-size:11px; color:var(--text-muted);">(生存:${statsA.active} / 気絶:${statsA.faint} / 死者:${statsA.dead})</span>`;
+            document.getElementById("title-b").innerHTML = `[B] 防衛軍 <span style="font-size:11px; color:var(--text-muted);">(生存:${statsB.active} / 気絶:${statsB.faint} / 死者:${statsB.dead})</span>`;
 
             document.querySelectorAll('.map-zone').forEach(el => el.innerHTML = '');
             const placeOnMap = (u, cl) => {
                 let zone = (u.category === "後援部隊" || u.category === "最後衛部隊") ? `zone-${cl}-back` : `zone-${cl}-front`;
                 let stateCl = u.isAlive() ? cl : "dead";
-                document.getElementById(zone).innerHTML += `<div class="map-unit ${stateCl}" id="map-${u.id}">${u.name} <br>(${u.getActive()}名)</div>`;
+                // マップのアイコンも短縮して「第〇歩兵」などを表示
+                let shortName = u.name.replace('大隊', '').replace('中隊', '').replace('小隊', '');
+                document.getElementById(zone).innerHTML += `<div class="map-unit ${stateCl}" id="map-${u.id}">${shortName} <br>(${u.getActive()}名)</div>`;
             };
             teams.A.forEach(u => placeOnMap(u, 'a'));
             teams.B.forEach(u => placeOnMap(u, 'b'));
