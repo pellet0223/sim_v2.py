@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL COMMAND DUAL - Ver7.0</title>
+    <title>TACTICAL COMMAND DUAL - Ver8.0</title>
     <style>
         :root {
             --bg-dark: #050b14; --panel-bg: #0f172a; --panel-border: #1e293b;
@@ -14,7 +14,7 @@
         body { margin: 0; padding: 10px; background: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', Meiryo, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         h1 { text-align: center; margin: 0 0 10px 0; font-size: 20px; color: var(--cyan); text-shadow: 0 0 10px rgba(6,182,212,0.5); letter-spacing: 2px; }
 
-        .top-section { display: flex; gap: 10px; height: 45%; min-height: 280px; margin-bottom: 10px; }
+        .top-section { display: flex; gap: 10px; height: 45%; min-height: 300px; margin-bottom: 10px; }
         .bottom-section { display: flex; gap: 10px; flex: 1; min-height: 0; }
         .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; overflow: hidden; }
         .panel-title { font-size: 14px; font-weight: bold; border-bottom: 1px solid var(--panel-border); padding-bottom: 5px; margin-bottom: 10px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
@@ -47,6 +47,9 @@
         .btn-del { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 2px 6px; border-radius: 3px; font-size: 10px; cursor: pointer; }
         .btn-del:hover { background: #ef4444; color: #fff; }
 
+        /* 所属ヘッダー（配備後リスト用） */
+        .faction-header { background: #1e293b; color: var(--yellow); font-size: 11px; font-weight: bold; padding: 4px 8px; margin: 10px 0 5px 0; border-left: 3px solid var(--yellow); border-radius: 2px; }
+
         .map-panel { flex: 2; position: relative; display: flex; flex-direction: column; }
         .battlefield { flex: 1; display: flex; justify-content: space-between; background: repeating-linear-gradient(0deg, #050b14, #050b14 20px, #0a1120 20px, #0a1120 40px); border: 1px solid #334155; border-radius: 4px; padding: 10px; overflow: hidden; }
         .map-zone { display: flex; flex-direction: column; justify-content: center; gap: 5px; width: 22%; }
@@ -69,7 +72,6 @@
         
         .unit-card { background: #0f172a; border-left: 3px solid #475569; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 12px; position: relative; }
         .unit-card.a { border-left-color: var(--cyan); } .unit-card.b { border-left-color: var(--red); }
-        .affiliation-tag { font-size: 9px; color: var(--text-muted); display: block; margin-bottom: 4px; }
         
         .bar-wrap { height: 12px; background: #000; border-radius: 2px; margin-top: 4px; position: relative; display: flex; overflow: hidden; }
         .bar-hp { background: var(--green); transition: width 0.3s; }
@@ -87,7 +89,7 @@
 </head>
 <body>
 
-    <h1>TACTICAL COMMAND DUAL - Ver 7.0</h1>
+    <h1>TACTICAL COMMAND DUAL - Ver 8.0 (究極版)</h1>
 
     <div class="top-section">
         <div class="panel setup-panel">
@@ -118,7 +120,7 @@
             <div class="panel-title" id="title-a" style="color:var(--cyan)">[A] 攻撃軍 <span style="font-size:11px; color:var(--text-muted);">(総兵力: 0)</span></div>
             <div id="list-a"></div>
         </div>
-        <div class="panel log-panel" id="log-area"><div style="color:var(--text-muted)">SYSTEM: 装備システム＆衛生兵AIがオンラインになりました。</div></div>
+        <div class="panel log-panel" id="log-area"><div style="color:var(--text-muted)">SYSTEM: 装備システム＆衛生兵AIがオンライン。すべての部隊を正常に読み込みました。</div></div>
         <div class="panel list-panel" id="panel-b">
             <div class="panel-title" id="title-b" style="color:var(--red)">[B] 防衛軍 <span style="font-size:11px; color:var(--text-muted);">(総兵力: 0)</span></div>
             <div id="list-b"></div>
@@ -131,26 +133,27 @@
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         const TRAIT_DESCRIPTIONS = {
-            "革命万歳": "無謀な攻撃による自傷ダメージが4割になる。また、死亡者発生時の士気低下を30%の確率で無効化する。",
+            "革命万歳": "無謀な攻撃の自傷ダメージが4割になる。死亡者発生時の士気低下を30%の確率で無効化。",
             "皇帝陛下万歳": "死亡者発生による部隊の士気低下ダメージが常に半減する。非常に粘り強い。",
             "粛清": "【特殊】味方部隊が敗走した際、生存者の半数を処刑し、士気を「無限」にして死ぬまで戦線に留まらせる。",
-            "衛生兵": "【救護】攻撃の代わりに味方の気絶者を優先して治療する。ダイスの出目の分だけHPを回復し、HPが半分を超えると戦線復帰(生存)する。"
+            "衛生兵": "【救護】攻撃の代わりに味方の気絶者を優先して治療する。ダイス出目の分だけHPを回復し、半分を超えると戦線復帰する。"
         };
 
         const DATABASE = {
             "ラルキア国家社会主義人民共和国": {
-                "第31歩兵大隊": { desc: "狂信的な国家社会主義の歩兵大隊。装甲はないが、革命万歳の精神で絶え間ない突撃を繰り返す。", size: 600, cat: "最前衛部隊", morale: 50, agi: 30, arm: 0, hp: 10, fail: 40, gen: [1, 1], spc: [1, 3], reck: [1, 3], traits: ["革命万歳"] },
-                "第4政治監査委員中隊": { desc: "味方の敗走を絶対に許さない恐るべき監査委員。敗走部隊の半数を処刑し、死ぬまで戦線に縛り付ける。", size: 100, cat: "後援部隊", morale: 200, agi: 30, arm: 0, hp: 10, fail: 30, gen: [1, 1], spc: [1, 2], reck: [1, 2], traits: ["革命万歳", "粛清"] },
-                "第〇機動装甲中隊": { desc: "高機動と重装甲を兼ね備えた特殊装甲部隊。絶大な火力を誇り、敵陣を蹂躙する。", size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 50, gen: [1, 4], spc: [2, 3], reck: [3, 3], traits: ["革命万歳"] },
-                "第〇衛生中隊": { desc: "高い機動力で戦場を駆け回り、倒れた味方を戦線復帰させる装甲救護部隊。驚異の回復力を持つ。", size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 10, gen: [2, 3], spc: [3, 4], reck: [5, 6], traits: ["衛生兵"] }
+                "第31歩兵大隊": { desc: "狂信的な国家社会主義の歩兵大隊。装甲はないが絶え間ない突撃を繰り返す。", size: 600, cat: "最前衛部隊", morale: 50, agi: 30, arm: 0, hp: 10, fail: 40, gen: [1, 1], spc: [1, 3], reck: [1, 3], traits: ["革命万歳"] },
+                "第4政治監査委員中隊": { desc: "味方の敗走を絶対に許さない恐るべき監査委員。敗走部隊の半数を処刑する。", size: 100, cat: "後援部隊", morale: 200, agi: 30, arm: 0, hp: 10, fail: 30, gen: [1, 1], spc: [1, 2], reck: [1, 2], traits: ["革命万歳", "粛清"] },
+                "第〇機動装甲中隊": { desc: "高機動と重装甲を兼ね備えた特殊装甲部隊。絶大な火力を誇り敵陣を蹂躙する。", size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 50, gen: [1, 4], spc: [2, 3], reck: [3, 3], traits: ["革命万歳"] },
+                "第〇衛生中隊": { desc: "高い機動力で戦場を駆け回り、倒れた味方を戦線復帰させる装甲救護部隊。", size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 10, gen: [2, 3], spc: [3, 4], reck: [5, 6], traits: ["衛生兵"] }
             },
             "全土カルヴェナ革命戦線": {
-                "第13革命パルチザン大隊": { desc: "祖国解放を掲げる民兵大隊。装甲は皆無だが、波状攻撃で敵を圧倒する。", size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] },
+                "第13革命パルチザン大隊": { desc: "祖国解放を掲げる民兵大隊。装甲は皆無だが波状攻撃で敵を圧倒する。", size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] },
                 "後方支援砲兵中隊": { desc: "安全な後方から致命的な砲撃を行う。戦局を覆す火力を誇る。", size: 100, cat: "後援部隊", morale: 80, agi: 10, arm: 0, hp: 15, fail: 40, gen: [2, 4], spc: [3, 6], reck: [1, 6], traits: [] }
             },
             "カルヴェナ帝国": {
                 "第22歩兵大隊": { desc: "カルヴェナ帝国の正規歩兵。規律正しく、皇帝への絶対の忠誠を胸に戦線を維持する。", size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
-                "重装甲防衛中隊": { desc: "分厚い装甲服を着込んだ防衛特化部隊。敵の攻撃を弾き返し前線を維持する。", size: 100, cat: "最前衛部隊", morale: 120, agi: 5, arm: 3, hp: 20, fail: 30, gen: [1, 3], spc: [1, 4], reck: [1, 5], traits: [] }
+                "重装甲防衛中隊": { desc: "分厚い装甲服を着込んだ防衛特化部隊。敵の攻撃を弾き返し前線を維持する。", size: 100, cat: "最前衛部隊", morale: 120, agi: 5, arm: 3, hp: 20, fail: 30, gen: [1, 3], spc: [1, 4], reck: [1, 5], traits: [] },
+                "特殊暗殺部隊 影": { desc: "闇に紛れて敵将の首を狙う極秘部隊。極めて高い機動力で奇襲を掛ける。", size: 20, cat: "特殊部隊", morale: 150, agi: 80, arm: 1, hp: 25, fail: 10, gen: [2, 6], spc: [3, 6], reck: [1, 10], traits: [] }
             }
         };
 
@@ -160,9 +163,8 @@
                 this.category = preset.cat; this.size = preset.size; 
                 this.morale = preset.morale; this.max_morale = preset.morale;
                 this.agi = preset.agi; this.arm = preset.arm; this.hp = preset.hp || 10; this.fail = preset.fail;
-                // ★ 配列のディープコピー（装備変更が他に影響しないため）
                 this.dice = { "通常攻撃": [...preset.gen], "特殊攻撃": [...preset.spc], "無謀な攻撃": [...preset.reck] };
-                this.traits = preset.traits;
+                this.traits = preset.traits || [];
                 
                 this.hpList = new Array(this.size).fill(this.hp);
                 this.statusList = new Array(this.size).fill(0); 
@@ -176,7 +178,6 @@
                 if (this.max_morale === "/") return this.statusList.some(s => s !== -1);
                 return !this.isRouted && this.statusList.some(s => s !== -1); 
             }
-            
             takeDamage(dmg) {
                 if (!this.isAlive() || roll100() <= this.fail) return { hit: false, killed: false };
                 let actualDmg = Math.min(Math.max(0, dmg - this.arm), this.hp);
@@ -192,31 +193,23 @@
                 if (this.hpList[idx] <= 0) { this.statusList[idx] = -1; killed = true; }
                 return { hit: true, killed: killed };
             }
-
-            // ★ 新規追加: 治癒システム（衛生兵用）
             receiveHealing(amount) {
                 let targets = [];
-                // 気絶者を優先
                 for(let i=0; i<this.size; i++) if(this.statusList[i] === 1 || this.statusList[i] === 2) targets.push(i);
-                // 気絶者がいなければ負傷した生存者を回復
                 if(targets.length === 0) {
                     for(let i=0; i<this.size; i++) if(this.statusList[i] === 0 && this.hpList[i] < this.hp) targets.push(i);
                 }
                 if(targets.length === 0) return false;
-
                 let idx = targets[Math.floor(Math.random() * targets.length)];
                 let oldStatus = this.statusList[idx];
                 this.hpList[idx] += amount;
                 if(this.hpList[idx] > this.hp) this.hpList[idx] = this.hp;
-
-                // HPが半分を超えたら気絶から復帰（生存）
                 if(this.hpList[idx] > this.hp / 2 && (oldStatus === 1 || oldStatus === 2)) {
                     this.statusList[idx] = 0;
-                    return true; // 復帰成功
+                    return true; 
                 }
                 return false;
             }
-
             applyMoraleDamage(deathsThisTurn) {
                 if (this.max_morale === "/" || this.isRouted || deathsThisTurn <= 0) return false;
                 let baseDmg = deathsThisTurn + roll(20);
@@ -235,48 +228,58 @@
         let turn = 1; let isBattling = false; let autoMode = false; let unitCounter = 0; let isProcessingTurn = false;
 
         function initSetup() {
-            const setupList = document.getElementById("setup-list");
-            for (let [faction, units] of Object.entries(DATABASE)) {
-                let factionHTML = `<details class="faction-group"><summary class="faction-summary">🎌 ${faction}</summary>`;
-                for (let [key, data] of Object.entries(units)) {
-                    let traitsHtml = `<div>[特性] なし</div>`;
-                    if (data.traits.length > 0) {
-                        let traitItems = data.traits.map(t => `<li><span class="trait-name">${t}</span>: ${TRAIT_DESCRIPTIONS[t]}</li>`).join('');
-                        traitsHtml = `<div class="trait-box"><span style="color:var(--cyan); font-weight:bold;">◆ 特性解説</span><ul>${traitItems}</ul></div>`;
+            try {
+                const setupList = document.getElementById("setup-list");
+                setupList.innerHTML = "";
+                for (let [faction, units] of Object.entries(DATABASE)) {
+                    let factionHTML = `<details class="faction-group"><summary class="faction-summary">🎌 ${faction}</summary>`;
+                    for (let [key, data] of Object.entries(units)) {
+                        let traitsHtml = `<div>[特性] なし</div>`;
+                        if (data.traits && data.traits.length > 0) {
+                            let traitItems = data.traits.map(t => `<li><span class="trait-name">${t}</span>: ${TRAIT_DESCRIPTIONS[t]}</li>`).join('');
+                            traitsHtml = `<div class="trait-box"><span style="color:var(--cyan); font-weight:bold;">◆ 特性解説</span><ul>${traitItems}</ul></div>`;
+                        }
+                        
+                        // エラー回避のため、onclickを後から付与する安全なDOM構築は避け、IDでイベントリスナーを後付けするための仕組みに変更
+                        let safeIdStr = `${faction}_${key}`.replace(/[^a-zA-Z0-9]/g, '_') + unitCounter++;
+                        
+                        factionHTML += `
+                            <details class="unit-details">
+                                <summary class="unit-summary">${key}</summary>
+                                <div class="preset-info">
+                                    <div class="flavor-text">"${data.desc}"</div>
+                                    <div class="stat-grid">
+                                        <div>[兵科] ${data.cat}</div><div>[規模] ${data.size}名</div>
+                                        <div>[士気] ${data.morale}</div><div>[装甲] ${data.arm} / [機動] ${data.agi}</div>
+                                        <div>[HP] ${data.hp || 10} / [失敗率] ${data.fail}%</div>
+                                        ${traitsHtml}
+                                    </div>
+                                    <div class="action-btns">
+                                        <div class="btn-row">
+                                            <span style="font-size:11px;">装備:</span>
+                                            <select id="equip-${safeIdStr}" style="flex:1;">
+                                                <option value="none">なし</option>
+                                                <option value="machinegun">機関銃 (+2D1特殊 / 歩兵大隊用)</option>
+                                                <option value="armor">追加装甲 (+1装甲 -50機動 / 無装甲用)</option>
+                                            </select>
+                                        </div>
+                                        <div class="btn-row">
+                                            <span style="font-size:11px;">数:</span>
+                                            <input type="number" id="cnt-${safeIdStr}" value="1" min="1" max="5" style="width:35px; text-align:center;">
+                                            <button class="btn-a" onclick="addUnitBySafeId('${faction}', '${key}', '${safeIdStr}', 'A')">◀ A軍へ</button>
+                                            <button class="btn-b" onclick="addUnitBySafeId('${faction}', '${key}', '${safeIdStr}', 'B')">B軍へ ▶</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        `;
                     }
-                    factionHTML += `
-                        <details class="unit-details">
-                            <summary class="unit-summary">${key}</summary>
-                            <div class="preset-info">
-                                <div class="flavor-text">"${data.desc}"</div>
-                                <div class="stat-grid">
-                                    <div>[兵科] ${data.cat}</div><div>[規模] ${data.size}名</div>
-                                    <div>[士気] ${data.morale}</div><div>[装甲] ${data.arm} / [機動] ${data.agi}</div>
-                                    <div>[HP] ${data.hp || 10} / [失敗率] ${data.fail}%</div>
-                                    ${traitsHtml}
-                                </div>
-                                <div class="action-btns">
-                                    <div class="btn-row">
-                                        <span style="font-size:11px;">装備:</span>
-                                        <select id="equip-${key}" style="flex:1;">
-                                            <option value="none">なし</option>
-                                            <option value="machinegun">機関銃 (+2D1特殊 / 歩兵大隊用)</option>
-                                            <option value="armor">追加装甲 (+1装甲 -50機動 / 無装甲用)</option>
-                                        </select>
-                                    </div>
-                                    <div class="btn-row">
-                                        <span style="font-size:11px;">数:</span>
-                                        <input type="number" id="cnt-${key}" value="1" min="1" max="5" style="width:35px; text-align:center;">
-                                        <button class="btn-a" onclick="addUnit('${faction}', '${key}', 'A')">◀ A軍へ</button>
-                                        <button class="btn-b" onclick="addUnit('${faction}', '${key}', 'B')">B軍へ ▶</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </details>
-                    `;
+                    factionHTML += `</details>`;
+                    setupList.innerHTML += factionHTML;
                 }
-                factionHTML += `</details>`;
-                setupList.innerHTML += factionHTML;
+            } catch (e) {
+                console.error("UI初期化エラー:", e);
+                alert("システムの読み込みに失敗しました。更新してください。");
             }
         }
 
@@ -286,14 +289,12 @@
             area.scrollTop = area.scrollHeight;
         }
 
-        // ★ 新規: 装備システム対応の配備処理
-        function addUnit(faction, key, team) {
+        function addUnitBySafeId(faction, key, safeIdStr, team) {
             if(isBattling) return;
             let data = DATABASE[faction][key];
-            let count = parseInt(document.getElementById(`cnt-${key}`).value);
-            let equip = document.getElementById(`equip-${key}`).value;
+            let count = parseInt(document.getElementById(`cnt-${safeIdStr}`).value);
+            let equip = document.getElementById(`equip-${safeIdStr}`).value;
 
-            // 装備の装着制限チェック
             if (equip === "machinegun") {
                 if (data.size !== 600 || !key.includes("歩兵")) {
                     alert("【機関銃】は「歩兵」と名の付く大隊(600名)にのみ装備可能です！");
@@ -310,11 +311,10 @@
                 let id = `u_${team}_${unitCounter++}`;
                 let unit = new Unit(key, data, faction, team, id);
 
-                // 装備のステータス補正
                 if (equip === "machinegun") {
                     unit.name += " (機関銃)";
-                    unit.dice["特殊攻撃"][0] += 2; // +2D
-                    unit.dice["特殊攻撃"][1] += 1; // D+1
+                    unit.dice["特殊攻撃"][0] += 2; 
+                    unit.dice["特殊攻撃"][1] += 1; 
                 } else if (equip === "armor") {
                     unit.name += " (装甲)";
                     unit.agi -= 50;
@@ -331,15 +331,22 @@
             updateUI();
         }
 
-        function updateUI() {
-            let totalA = 0; let totalB = 0;
+        function renderTeamList(teamId, teamArray) {
+            const list = document.getElementById(`list-${teamId.toLowerCase()}`);
+            list.innerHTML = "";
+            let teamTotal = 0;
+            
+            // ★ 所属（Affiliation）ごとにグループ分けして表示
+            let grouped = {};
+            teamArray.forEach(u => {
+                if(!grouped[u.affiliation]) grouped[u.affiliation] = [];
+                grouped[u.affiliation].push(u);
+            });
 
-            ["A", "B"].forEach(t => {
-                const list = document.getElementById(`list-${t.toLowerCase()}`);
-                list.innerHTML = "";
-                let teamTotal = 0;
-
-                teams[t].forEach(u => {
+            for (let [faction, units] of Object.entries(grouped)) {
+                list.innerHTML += `<div class="faction-header">${faction}</div>`;
+                
+                units.forEach(u => {
                     let a = u.getActive(), f = u.getFaint(), d = u.getDead();
                     teamTotal += a; 
                     
@@ -348,16 +355,13 @@
                     let st = u.isRouted ? "敗走" : (d >= u.size ? "全滅" : "戦闘中");
                     let nameColor = u.max_morale === "/" ? "#dc2626" : (u.isRouted ? "var(--red)" : "var(--green)");
                     
-                    let delBtn = !isBattling ? `<button class="btn-del" onclick="removeUnit('${t}', '${u.id}')">✖</button>` : '';
+                    let delBtn = !isBattling ? `<button class="btn-del" onclick="removeUnit('${teamId}', '${u.id}')">✖</button>` : '';
 
                     list.innerHTML += `
-                        <div class="unit-card ${t.toLowerCase()}" style="${u.isRouted || d>=u.size ? 'opacity:0.5' : ''}">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <span class="affiliation-tag">${u.affiliation}</span>
-                                ${delBtn}
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:4px;">
-                                <span>${u.name}</span><span style="color:${nameColor}">${st}</span>
+                        <div class="unit-card ${teamId.toLowerCase()}" style="${u.isRouted || d>=u.size ? 'opacity:0.5' : ''}">
+                            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:4px; align-items:center;">
+                                <span style="font-size:13px;">${u.name}</span>
+                                <div><span style="color:${nameColor}; font-size:11px; margin-right:5px;">${st}</span>${delBtn}</div>
                             </div>
                             <div class="bar-wrap">
                                 <div class="bar-hp" style="width:${aPct}%"></div>
@@ -372,10 +376,16 @@
                         </div>
                     `;
                 });
+            }
+            return teamTotal;
+        }
 
-                if(t === "A") { totalA = teamTotal; document.getElementById("title-a").innerHTML = `[A] 攻撃軍 <span style="font-size:11px; color:var(--text-muted);">(総生存者: ${totalA}名)</span>`; }
-                if(t === "B") { totalB = teamTotal; document.getElementById("title-b").innerHTML = `[B] 防衛軍 <span style="font-size:11px; color:var(--text-muted);">(総生存者: ${totalB}名)</span>`; }
-            });
+        function updateUI() {
+            let totalA = renderTeamList("A", teams.A);
+            let totalB = renderTeamList("B", teams.B);
+
+            document.getElementById("title-a").innerHTML = `[A] 攻撃軍 <span style="font-size:11px; color:var(--text-muted);">(総生存者: ${totalA}名)</span>`;
+            document.getElementById("title-b").innerHTML = `[B] 防衛軍 <span style="font-size:11px; color:var(--text-muted);">(総生存者: ${totalB}名)</span>`;
 
             document.querySelectorAll('.map-zone').forEach(el => el.innerHTML = '');
             const placeOnMap = (u, cl) => {
@@ -455,11 +465,10 @@
                         let isMedic = atk.traits.includes("衛生兵");
                         let target;
 
-                        // ★ 衛生兵のターゲット選択（味方を回復）
                         if(isMedic) {
                             let allies = teams[atk.team].filter(u => u.isAlive() && u.getFaint() > 0);
                             if(allies.length === 0) allies = teams[atk.team].filter(u => u.isAlive() && u.getActive() > 0 && u !== atk);
-                            if(allies.length === 0) allies = [atk]; // 誰もいなければ自分を回復
+                            if(allies.length === 0) allies = [atk]; 
                             target = allies[Math.floor(Math.random() * allies.length)];
                         } else {
                             let r = roll100();
@@ -481,4 +490,128 @@
                         let activeMen = atk.getActive();
 
                         for (let i=0; i<activeMen; i++) {
-                            let dmg = 0; for
+                            let dmg = 0; for(let d=0; d<dNum; d++) dmg += roll(dSide);
+                            
+                            if (isMedic) {
+                                if (atkType === "無謀な攻撃") {
+                                    let ratio = atk.traits.includes("革命万歳") ? 0.4 : 0.3;
+                                    let selfDmg = Math.floor(dmg * ratio);
+                                    if(target.receiveHealing(dmg - selfDmg)) revives++;
+                                    if(atk.takeDamage(Math.floor(dmg * ratio)).killed) selfKills++;
+                                } else {
+                                    if(target.receiveHealing(dmg)) revives++;
+                                }
+                            } else {
+                                if (atkType === "無謀な攻撃") {
+                                    let ratio = atk.traits.includes("革命万歳") ? 0.4 : 0.3;
+                                    let res = target.takeDamage(dmg - Math.floor(dmg * ratio));
+                                    if(res.hit) hits++; if(res.killed) kills++;
+                                    if(atk.takeDamage(Math.floor(dmg * ratio)).killed) selfKills++;
+                                } else {
+                                    let res = target.takeDamage(dmg);
+                                    if(res.hit) hits++; if(res.killed) kills++;
+                                }
+                            }
+                        }
+
+                        if (isMedic) {
+                            let logTxt = `<span class="log-atk">[${atk.name}] が ${atkType} -> [${target.name}] (救護活動)</span><br>`;
+                            logTxt += `<span class="log-dmg"> └ 戦線復帰: <span style="color:var(--green); font-weight:bold;">${revives}名</span></span>`;
+                            if (selfKills > 0) logTxt += `<span class="log-fatal"> | 医療ミス(自傷): ${selfKills}名</span>`;
+                            logHTML(logTxt);
+                        } else {
+                            let logTxt = `<span class="log-atk">[${atk.name}] が ${atkType} -> [${target.name}]</span><br>`;
+                            logTxt += `<span class="log-dmg"> └ 有効打: ${hits} / 新たな死者: <span class="log-fatal">${kills}名</span></span>`;
+                            if (atkType === "無謀な攻撃") logTxt += `<span class="log-fatal"> | 自軍犠牲: ${selfKills}名</span>`;
+                            logHTML(logTxt);
+                        }
+                        
+                        updateUI();
+                        await sleep(100);
+                    }
+                }
+            }
+
+            ["A", "B"].forEach(side => {
+                teams[side].forEach(u => {
+                    for(let i=0; i<u.size; i++) {
+                        if (u.statusList[i] === 1) u.statusList[i] = 2;
+                        else if (u.statusList[i] === 2) {
+                            u.statusList[i] = -1; 
+                            u.hpList[i] = 0;
+                        }
+                    }
+                });
+            });
+
+            [...teams.A, ...teams.B].forEach(u => {
+                if (!u.isAlive()) return;
+                
+                let deathsThisTurn = u.getDead() - u.turnStartDead;
+                if(u.applyMoraleDamage(deathsThisTurn)) {
+                    
+                    let commissars = teams[u.team].filter(ally => ally.traits.includes("粛清") && ally.isAlive() && ally !== u);
+                    
+                    if (commissars.length > 0) {
+                        u.isRouted = false;
+                        u.max_morale = "/";
+                        u.morale = "/";
+                        
+                        let nonDead = [];
+                        for(let i=0; i<u.size; i++) if (u.statusList[i] !== -1) nonDead.push(i);
+                        
+                        let killCount = Math.floor(nonDead.length / 2);
+                        nonDead.sort(() => Math.random() - 0.5); 
+                        for(let i=0; i<killCount; i++) {
+                            u.statusList[nonDead[i]] = -1;
+                            u.hpList[nonDead[i]] = 0;
+                        }
+                        logHTML(`<span class="log-route" style="background:#b91c1c; font-size:14px;">💥【粛清発動】 政治監査委員が ${u.name} の逃亡兵を処刑！半数を粛清し、徹底抗戦を命じた！</span>`);
+                    } else {
+                        u.isRouted = true;
+                        for(let i=0; i<u.size; i++) if(u.statusList[i] > 0) u.statusList[i] = -1; 
+                        logHTML(`<span class="log-route">⚠️【戦線崩壊】 ${u.name} は恐怖に耐えきれず敗走した！！</span>`);
+                    }
+                }
+            });
+
+            turn++;
+            updateUI();
+            isProcessingTurn = false;
+
+            let aAlive = teams.A.some(u => u.isAlive());
+            let bAlive = teams.B.some(u => u.isAlive());
+
+            if (!aAlive || !bAlive) {
+                if(autoMode) toggleAuto(); 
+                document.getElementById("btn-auto").disabled = true;
+                let winner = aAlive ? "攻撃軍(A)" : (bAlive ? "防衛軍(B)" : "引き分け(両軍全滅)");
+                logHTML(`<div class="log-turn" style="font-size:18px; color:var(--cyan);">🏆 戦闘終了！ 勝者: ${winner} 🏆</div>`);
+                return false;
+            }
+            
+            if (autoMode) {
+                setTimeout(runTurn, 400); 
+            } else {
+                document.getElementById("btn-next").disabled = false;
+            }
+            return true;
+        }
+
+        function resetGame() {
+            teams = { "A": [], "B": [] }; turn = 1; isBattling = false; autoMode = false; unitCounter = 0; isProcessingTurn = false;
+            let btnAuto = document.getElementById("btn-auto");
+            btnAuto.disabled = true;
+            btnAuto.innerHTML = "⏩ 自動実行";
+            btnAuto.style.background = "";
+            btnAuto.style.color = "white";
+            document.getElementById("btn-start").disabled = false;
+            document.getElementById("btn-next").disabled = true;
+            document.getElementById("log-area").innerHTML = '<div style="color:var(--text-muted)">SYSTEM: 配備をリセットしました。</div>';
+            updateUI();
+        }
+
+        document.addEventListener('DOMContentLoaded', initSetup);
+    </script>
+</body>
+</html>
