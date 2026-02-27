@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TACTICAL COMMAND DUAL</title>
+    <style>
+        /* モダン・サイバーパンク風のCSS */
+        :root {
+            --bg-color: #0b1120; --panel-bg: #1e293b; --panel-border: #334155;
+            --accent-cyan: #22d3ee; --accent-red: #f43f5e; --accent-green: #10b981;
+            --text-main: #f8fafc; --text-sub: #94a3b8;
+            --font-main: 'Segoe UI', Meiryo, sans-serif; --font-mono: Consolas, monospace;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 15px; background: var(--bg-color); color: var(--text-main); font-family: var(--font-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        h1 { text-align: center; margin: 0 0 15px 0; color: #fff; text-shadow: 0 0 10px var(--accent-cyan); letter-spacing: 2px; font-size: 22px; }
+        
+        /* 画面レイアウト */
+        .container { display: flex; flex: 1; gap: 15px; min-height: 0; }
+        .side-col { width: 320px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; padding-right: 5px; }
+        .center-col { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
+        
+        /* パネル共通 */
+        .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 6px; padding: 15px; display: flex; flex-direction: column; }
+        .panel-header { font-size: 14px; font-weight: bold; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--panel-border); }
+        
+        /* 部隊編成エリア */
+        .setup-area { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        select, input { background: #0f172a; color: #fff; border: 1px solid #475569; padding: 6px; border-radius: 4px; font-family: var(--font-main); }
+        button { background: #3b82f6; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #60a5fa; box-shadow: 0 0 8px #3b82f6; }
+        button:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+        .btn-red { background: var(--accent-red); } .btn-red:hover { background: #fb7185; box-shadow: 0 0 8px var(--accent-red); }
+        .btn-green { background: var(--accent-green); } .btn-green:hover { background: #34d399; box-shadow: 0 0 8px var(--accent-green); }
+        
+        /* ユニットカード */
+        .unit-card { background: #0f172a; border-left: 4px solid #475569; padding: 10px; border-radius: 4px; margin-bottom: 10px; transition: 0.3s; }
+        .unit-card.team-a { border-left-color: var(--accent-cyan); }
+        .unit-card.team-b { border-left-color: var(--accent-red); }
+        .unit-card.routed { opacity: 0.5; border-left-color: #64748b; filter: grayscale(80%); }
+        .unit-header { display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-bottom: 8px; }
+        .unit-stats { font-size: 11px; color: var(--text-sub); display: flex; justify-content: space-between; margin-top: 5px; }
+        
+        /* ゲージバー */
+        .bar-wrap { background: #000; height: 14px; border-radius: 3px; position: relative; margin-bottom: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; transition: width 0.3s; }
+        .bar-fill.hp { background: linear-gradient(90deg, #047857, #10b981); }
+        .bar-fill.morale { background: linear-gradient(90deg, #1d4ed8, #3b82f6); }
+        .bar-text { position: absolute; top: 0; left: 5px; font-size: 10px; line-height: 14px; font-weight: bold; color: #fff; text-shadow: 1px 1px 1px #000; }
+        
+        /* ログエリア */
+        .log-area { flex: 1; background: #020617; border: 1px solid var(--panel-border); border-radius: 6px; padding: 15px; overflow-y: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.6; }
+        .log-turn { color: #facc15; font-weight: bold; margin-top: 15px; border-bottom: 1px dashed #334155; padding-bottom: 5px; }
+        .log-atk { color: #c084fc; }
+        .log-dmg { color: #cbd5e1; }
+        .log-fatal { color: #f87171; }
+        .log-route { color: #fff; background: #9f1239; padding: 2px 5px; font-weight: bold; display: inline-block; margin: 2px 0; border-radius: 2px; }
+        .log-sys { color: var(--text-sub); }
+        
+        /* スクロールバー装飾 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body>
+
+    <h1>TACTICAL COMMAND DUAL - Web UI Edition</h1>
+
+    <div class="panel" style="margin-bottom: 15px;">
+        <div class="setup-area">
+            <select id="sel-preset">
+                <option value="第13革命パルチザン大隊">第13革命パルチザン大隊</option>
+                <option value="第22歩兵大隊">第22歩兵大隊</option>
+                <option value="後方支援中隊">後方支援中隊 (100人)</option>
+                <option value="特殊暗殺小隊">特殊暗殺小隊 (20人)</option>
+            </select>
+            <span>配備数:</span>
+            <input type="number" id="inp-count" value="1" min="1" max="10" style="width: 60px;">
+            <button onclick="addUnit('A')" style="background: var(--accent-cyan); color: #000;">◀ 攻撃(A)に配備</button>
+            <button onclick="addUnit('B')" style="background: var(--accent-red); color: #fff;">防衛(B)に配備 ▶</button>
+            <span style="flex:1;"></span>
+            <button id="btn-start" onclick="startBattle()" class="btn-green">⚔️ 戦闘開始</button>
+            <button id="btn-next" onclick="runTurn()" disabled>⏭ 次ターン</button>
+            <button id="btn-auto" onclick="runAuto()" disabled>⏩ 自動実行</button>
+            <button onclick="resetGame()" class="btn-red">🔄 リセット</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="side-col">
+            <div class="panel" style="flex:1; padding-right:5px;">
+                <div class="panel-header" style="color: var(--accent-cyan);">[A] 攻撃軍配備状況</div>
+                <div id="list-a" style="overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <div class="center-col">
+            <div id="log" class="log-area">
+                <div class="log-sys">SYSTEM: 司令官、ダッシュボードがオンラインになりました。部隊を配備してください。</div>
+            </div>
+        </div>
+
+        <div class="side-col">
+            <div class="panel" style="flex:1; padding-right:5px;">
+                <div class="panel-header" style="color: var(--accent-red);">[B] 防衛軍配備状況</div>
+                <div id="list-b" style="overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 乱数ツール ---
+        const roll = (sides) => Math.floor(Math.random() * sides) + 1;
+        const roll100 = () => Math.floor(Math.random() * 100) + 1;
+
+        // --- ユニットプリセット ---
+        const PRESETS = {
+            "第13革命パルチザン大隊": { size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] },
+            "第22歩兵大隊": { size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
+            "後方支援中隊": { size: 100, cat: "後援部隊", morale: 80, agi: 10, arm: 1, hp: 15, fail: 40, gen: [1, 3], spc: [1, 4], reck: [1, 6], traits: [] },
+            "特殊暗殺小隊": { size: 20, cat: "特殊部隊", morale: 150, agi: 50, arm: 0, hp: 20, fail: 10, gen: [2, 6], spc: [3, 6], reck: [1, 10], traits: [] }
+        };
+
+        // --- クラス定義 ---
+        class Unit {
+            constructor(name, preset, team, id) {
+                this.id = id;
+                this.name = `${team}: ${name}`;
+                this.team = team;
+                this.category = preset.cat;
+                this.size = preset.size;
+                this.morale = preset.morale;
+                this.max_morale = preset.morale;
+                this.agi = preset.agi;
+                this.arm = preset.arm;
+                this.hp = preset.hp;
+                this.fail = preset.fail;
+                this.dice = { "通常攻撃": preset.gen, "特殊攻撃": preset.spc, "無謀な攻撃": preset.reck };
+                this.traits = preset.traits;
+                
+                // 動的ステータス
+                this.hpList = new Array(this.size).fill(this.hp);
+                this.statusList = new Array(this.size).fill(0); // 0:生存, 1-2:気絶, -1:死亡
+                this.isRouted = false;
+                this.turnDeaths = 0;
+            }
+
+            getActive() { return this.statusList.filter(s => s === 0).length; }
+            getFaint() { return this.statusList.filter(s => s === 1 || s === 2).length; }
+            getDead() { return this.statusList.filter(s => s === -1).length; }
+            isAlive() { 
+                if (this.max_morale === "/") return this.statusList.some(s => s !== -1);
+                return !this.isRouted && this.statusList.some(s => s !== -1); 
+            }
+
+            takeDamage(dmg) {
+                if (!this.isAlive() || roll100() <= this.fail) return false;
+                
+                let actualDmg = Math.min(Math.max(0, dmg - this.arm), this.hp);
+                let targets = [];
+                for(let i=0; i<this.size; i++) if(this.statusList[i] >= 0) targets.push(i);
+                if(targets.length === 0) return false;
+
+                let idx = targets[Math.floor(Math.random() * targets.length)];
+                let oldHp = this.hpList[idx];
+                this.hpList[idx] -= actualDmg;
+
+                // 1耐えルール
+                if (oldHp > 0 && this.hpList[idx] <= 0) this.hpList[idx] = 1;
+
+                if (this.hpList[idx] <= this.hp / 2 && this.statusList[idx] === 0) {
+                    this.statusList[idx] = 1; // 気絶
+                } else if (this.hpList[idx] <= 0) {
+                    this.statusList[idx] = -1; // 死亡
+                    this.turnDeaths++;
+                    
+                    // 士気チェック（死亡するごとに毎回判定）
+                    if (this.max_morale !== "/" && !this.isRouted) {
+                        let threshold = this.traits.includes("皇帝陛下万歳") ? 49 : 45;
+                        if (roll100() <= threshold) {
+                            this.morale--;
+                            if (this.morale <= 0) {
+                                this.isRouted = true;
+                                logHTML(`<span class="log-route">⚠️【戦線崩壊】 ${this.name} は士気が尽き、敗走した！</span>`);
+                                // 敗走時、残りの気絶者は死亡
+                                for(let i=0; i<this.size; i++) {
+                                    if(this.statusList[i] > 0) this.statusList[i] = -1;
+                                }
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+
+        // --- グローバル変数 ---
+        let teams = { "A": [], "B": [] };
+        let turn = 1;
+        let isBattling = false;
+        let autoInterval = null;
+        let unitCounter = 0;
+
+        // --- UI関数 ---
+        function logHTML(html) {
+            const logArea = document.getElementById("log");
+            let div = document.createElement("div");
+            div.innerHTML = html;
+            logArea.appendChild(div);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function renderRoster() {
+            ["A", "B"].forEach(t => {
+                const container = document.getElementById(`list-${t.toLowerCase()}`);
+                container.innerHTML = "";
+                teams[t].forEach(u => {
+                    let active = u.getActive(), faint = u.getFaint(), dead = u.getDead();
+                    let hpPct = Math.max(0, (active + faint) / u.size * 100);
+                    let morPct = u.max_morale === "/" ? 100 : Math.max(0, u.morale / u.max_morale * 100);
+                    let status = u.isRouted ? "敗走" : (dead >= u.size ? "全滅" : "戦闘中");
+                    let stateClass = u.isRouted || dead >= u.size ? "routed" : "";
+                    
+                    container.innerHTML += `
+                        <div class="unit-card team-${t.toLowerCase()} ${stateClass}">
+                            <div class="unit-header">
+                                <span>${u.name}</span>
+                                <span style="color:${u.isRouted?'#f87171':'#34d399'}; font-size:12px;">${status}</span>
+                            </div>
+                            <div class="bar-wrap">
+                                <div class="bar-fill hp" style="width:${hpPct}%"></div>
+                                <div class="bar-text">生存: ${active} / 気絶: ${faint}</div>
+                            </div>
+                            <div class="bar-wrap">
+                                <div class="bar-fill morale" style="width:${morPct}%"></div>
+                                <div class="bar-text">士気: ${u.max_morale === "/" ? "無限" : u.morale}</div>
+                            </div>
+                            <div class="unit-stats">
+                                <span>[${u.category}]</span>
+                                <span>機動:${u.agi} 失敗:${u.fail}%</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        // --- ロジック ---
+        function addUnit(team) {
+            if(isBattling) return alert("戦闘中は追加できません");
+            let key = document.getElementById("sel-preset").value;
+            let count = parseInt(document.getElementById("inp-count").value);
+            for(let i=0; i<count; i++) {
+                teams[team].push(new Unit(key, PRESETS[key], team, `u${unitCounter++}`));
+            }
+            renderRoster();
+            logHTML(`<span class="log-sys">SYSTEM: [${team}軍] に ${key} を配備しました。</span>`);
+        }
+
+        function resetGame() {
+            teams = { "A": [], "B": [] };
+            turn = 1; isBattling = false; unitCounter = 0;
+            if(autoInterval) clearInterval(autoInterval);
+            document.getElementById("btn-start").disabled = false;
+            document.getElementById("btn-next").disabled = true;
+            document.getElementById("btn-auto").disabled = true;
+            document.getElementById("log").innerHTML = '<div class="log-sys">SYSTEM: 配備をリセットしました。</div>';
+            renderRoster();
+        }
+
+        function getTarget(attacker, enemyTeam) {
+            let r = roll100();
+            let cat = r === 1 ? "特殊部隊" : (r === 2 ? "最後衛部隊" : (r <= 13 ? "後援部隊" : "最前衛部隊"));
+            
+            let enemies = teams[enemyTeam].filter(u => u.isAlive());
+            if(enemies.length === 0) return null;
+
+            if (cat === "最後衛部隊" && enemies.some(u => u.category === "最前衛部隊")) {
+                return getTarget(attacker, enemyTeam); // 再帰で再ロール
+            }
+
+            let possible = enemies.filter(u => u.category === cat);
+            if (possible.length === 0) {
+                // 対象カテゴリーがいない場合はランダムな敵へ（超過処理の代替）
+                return enemies[Math.floor(Math.random() * enemies.length)];
+            }
+
+            possible.sort((a, b) => a.agi - b.agi);
+            let minAgi = possible[0].agi;
+            let candidates = possible.filter(u => u.agi === minAgi);
+            return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        function startBattle() {
+            if(teams.A.length === 0 || teams.B.length === 0) return alert("両軍に部隊を配備してください");
+            isBattling = true;
+            document.getElementById("btn-start").disabled = true;
+            document.getElementById("btn-next").disabled = false;
+            document.getElementById("btn-auto").disabled = false;
+            logHTML(`<div class="log-turn" style="font-size:16px;">⚔️ MISSION START ⚔️</div>`);
+        }
+
+        function runTurn() {
+            logHTML(`<div class="log-turn">▼ TURN ${turn} ▼</div>`);
+            
+            let cats = ["特殊部隊", "最後衛部隊", "最前衛部隊", "後援部隊"];
+            for (let cat of cats) {
+                for (let side of ["A", "B"]) {
+                    let enemySide = side === "A" ? "B" : "A";
+                    
+                    teams[side].forEach(atk => {
+                        if (atk.category !== cat || !atk.isAlive()) return;
+                        
+                        let target = getTarget(atk, enemySide);
+                        if (!target) return;
+
+                        let actRoll = roll(6);
+                        let atkType = actRoll === 1 ? "特殊攻撃" : (actRoll === 6 ? "無謀な攻撃" : "通常攻撃");
+                        let [dNum, dSide] = atk.dice[atkType];
+                        
+                        let hits = 0; target.turnDeaths = 0; atk.turnDeaths = 0;
+                        let activeMen = atk.getActive();
+
+                        for (let i=0; i<activeMen; i++) {
+                            let dmg = 0; for(let d=0; d<dNum; d++) dmg += roll(dSide);
+                            
+                            if (atkType === "無謀な攻撃") {
+                                let ratio = atk.traits.includes("革命万歳") ? 0.4 : 0.3;
+                                let selfDmg = Math.floor(dmg * ratio);
+                                if (target.takeDamage(dmg - selfDmg)) hits++;
+                                atk.takeDamage(selfDmg);
+                            } else {
+                                if (target.takeDamage(dmg)) hits++;
+                            }
+                        }
+
+                        let logTxt = `<span class="log-atk">[${atk.name}] が ${atkType} (${actRoll}) -> [${target.name}]</span><br>`;
+                        logTxt += `<span class="log-dmg">&nbsp;&nbsp;└ 有効打: ${hits} / 敵死傷: <span class="log-fatal">${target.turnDeaths}名</span></span>`;
+                        if (atkType === "無謀な攻撃") logTxt += `<span class="log-fatal"> | 自軍犠牲: ${atk.turnDeaths}名</span>`;
+                        logHTML(logTxt);
+                    });
+                }
+            }
+
+            // 気絶進行
+            ["A", "B"].forEach(side => {
+                teams[side].forEach(u => {
+                    for(let i=0; i<u.size; i++) {
+                        if (u.statusList[i] === 1) u.statusList[i] = 2;
+                        else if (u.statusList[i] === 2) u.statusList[i] = -1;
+                    }
+                });
+            });
+
+            turn++;
+            renderRoster();
+
+            let aAlive = teams.A.some(u => u.isAlive());
+            let bAlive = teams.B.some(u => u.isAlive());
+
+            if (!aAlive || !bAlive) {
+                if(autoInterval) clearInterval(autoInterval);
+                let winner = aAlive ? "攻撃軍(A)" : (bAlive ? "防衛軍(B)" : "引き分け(両軍全滅)");
+                logHTML(`<div class="log-turn" style="font-size:18px; color:#10b981;">🏆 戦闘終了！ 勝者: ${winner} 🏆</div>`);
+                document.getElementById("btn-next").disabled = true;
+                document.getElementById("btn-auto").disabled = true;
+                return false;
+            }
+            return true;
+        }
+
+        function runAuto() {
+            document.getElementById("btn-next").disabled = true;
+            document.getElementById("btn-auto").disabled = true;
+            autoInterval = setInterval(() => {
+                if (!runTurn()) clearInterval(autoInterval);
+            }, 300); // 0.3秒間隔で自動進行
+        }
+    </script>
+</body>
+</html>
