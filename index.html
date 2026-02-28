@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL COMMAND DUAL - Ver17.0</title>
+    <title>TACTICAL COMMAND DUAL - Ver18.0</title>
     <style>
         :root {
             --bg-dark: #020617; --panel-bg: #0f172a; --panel-border: #1e293b;
@@ -13,85 +13,89 @@
         * { box-sizing: border-box; outline: none; }
         body { margin: 0; padding: 12px; background: var(--bg-dark); color: var(--text-main); font-family: 'Consolas', 'Meiryo', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        h1 { text-align: center; margin: 0 0 12px 0; font-size: 18px; color: var(--cyan); text-shadow: 0 0 8px rgba(34,211,238,0.4); letter-spacing: 3px; border-bottom: 1px solid var(--panel-border); padding-bottom: 5px; }
+        h1 { text-align: center; margin: 0 0 10px 0; font-size: 18px; color: var(--cyan); text-shadow: 0 0 8px rgba(34,211,238,0.4); letter-spacing: 3px; border-bottom: 1px solid var(--panel-border); padding-bottom: 5px; flex-shrink: 0; }
 
         .layout { display: flex; flex: 1; gap: 12px; min-height: 0; }
         
-        .side-panel { width: 320px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
-        .main-panel { flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; }
+        .side-panel { width: 320px; display: flex; flex-direction: column; gap: 12px; min-height: 0; transition: 0.3s ease-out; }
+        .main-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 0; }
 
-        .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; min-height: 0; }
-        .panel-title { font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; border-left: 3px solid var(--cyan); padding-left: 8px; flex-shrink: 0; }
+        .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; min-height: 0; }
+        .panel-title { font-size: 12px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; border-left: 3px solid var(--cyan); padding-left: 8px; flex-shrink: 0; }
 
-        /* 編成データベース */
+        /* --- データベース --- */
         .setup-area { flex: 1; overflow-y: auto; padding-right: 5px; min-height: 0; }
         details { background: #161b22; border: 1px solid #30363d; border-radius: 4px; margin-bottom: 6px; }
-        summary { padding: 8px; font-size: 12px; cursor: pointer; color: var(--yellow); font-weight: bold; outline: none; }
+        summary { padding: 8px; font-size: 12px; cursor: pointer; color: var(--yellow); font-weight: bold; }
         summary:hover { background: #1f2937; }
         .unit-info-box { padding: 8px; background: #0d1117; font-size: 11px; color: var(--text-muted); border-top: 1px solid #30363d; }
         
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px; }
         .stat-grid-atk { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-bottom: 8px; background: #111827; padding: 4px; border-radius: 4px; text-align: center; }
         
-        .ctrl-row { display: flex; gap: 5px; margin-top: 8px; align-items: center; }
-        select, input { background: #020617; color: #fff; border: 1px solid #334155; border-radius: 4px; padding: 4px; font-size: 11px; flex: 1; }
-        input[type="number"] { max-width: 40px; text-align: center; }
+        .ctrl-row { display: flex; gap: 4px; margin-top: 8px; align-items: center; }
+        select, input { background: #020617; color: #fff; border: 1px solid #334155; border-radius: 4px; padding: 4px; font-size: 10px; flex: 1; }
+        input[type="number"] { max-width: 35px; text-align: center; }
         
-        button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 12px; font-weight: bold; transition: 0.2s; font-family: inherit; font-size: 11px; }
+        button { cursor: pointer; border: none; border-radius: 4px; padding: 6px 10px; font-weight: bold; transition: 0.2s; font-family: inherit; font-size: 11px; }
         button:hover:not(:disabled) { filter: brightness(1.2); }
         button:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
         
         .btn-a { background: var(--cyan); color: #000; }
         .btn-b { background: var(--red); color: #fff; }
-        .btn-main { background: var(--green); color: #000; width: 100%; padding: 10px; margin-top: 5px; font-size: 13px; }
 
-        /* 特性トグルスイッチ */
         .trait-toggle-panel { background: #111827; padding: 8px; border-radius: 4px; margin-bottom: 10px; border: 1px solid var(--cyan); }
-        .toggle-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--cyan); font-weight: bold; }
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--cyan); font-weight: bold; }
         .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 18px; }
         .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--cyan); }
         input:checked + .slider:before { transform: translateX(16px); }
-
+        
         .trait-box { background: #111827; border: 1px solid #334155; padding: 6px; border-radius: 4px; margin-top: 4px; margin-bottom: 10px; }
         .trait-box ul { margin: 4px 0 0 20px; padding: 0; font-size: 10px; color: #cbd5e1; }
-        .trait-box li { margin-bottom: 4px; }
-        .trait-name { color: #f472b6; font-weight: bold; }
 
-        /* --- レーダーマップ --- */
+        /* --- コントロール・バー --- */
+        .control-bar { display: flex; gap: 8px; padding: 10px; background: #1e293b; border-radius: 8px; align-items: center; flex-shrink: 0; }
+        .control-bar button { flex: 1; padding: 10px; font-size: 13px; }
+        .btn-main { background: var(--green); color: #000; }
+        .btn-reset { background: transparent; border: 1px solid var(--red); color: var(--red); }
+
+        /* --- レーダーマップ改善 (フォーメーション配置) --- */
         #battlefield-container { flex: 1.5; position: relative; background: #000; border: 1px solid #334155; border-radius: 8px; overflow: hidden; min-height: 250px; }
         #attack-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-        .battlefield { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-between; padding: 10px; }
+        .battlefield { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-between; padding: 10px 4px; gap: 4px; }
         
-        .map-zone { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; width: 23%; height: 100%; overflow-y: auto; padding-right: 4px; }
-        .map-center { width: 4%; border-left: 1px dashed rgba(251,113,133,0.3); border-right: 1px dashed rgba(34,211,238,0.3); }
+        .map-zone { flex: 1; display: flex; flex-direction: column; gap: 2px; height: 100%; overflow-y: auto; overflow-x: hidden; position: relative; align-items: center; padding-top: 15px; }
+        .map-center { width: 10px; flex-shrink: 0; border-left: 1px dashed rgba(251,113,133,0.3); border-right: 1px dashed rgba(34,211,238,0.3); }
+        .map-zone::-webkit-scrollbar { width: 2px; } .map-zone::-webkit-scrollbar-thumb { background: #334155; }
 
-        .map-zone::-webkit-scrollbar { width: 4px; }
-        .map-zone::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        /* ゾーンの背景文字 */
+        .map-zone::before { position: absolute; top: 0; width: 100%; text-align: center; font-size: 9px; color: #475569; font-weight: bold; pointer-events: none; }
+        #zone-a-4::before, #zone-b-4::before { content: "最後衛"; }
+        #zone-a-3::before, #zone-b-3::before { content: "特殊"; }
+        #zone-a-2::before, #zone-b-2::before { content: "後援"; }
+        #zone-a-1::before, #zone-b-1::before { content: "最前衛"; }
 
         .map-unit { 
-            background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.4); padding: 4px; 
-            border-radius: 4px; font-size: 9px; text-align: center; color: #fff;
-            width: 100%; max-width: 85px; position: relative; transition: 0.2s;
+            background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.4); padding: 2px; 
+            border-radius: 2px; text-align: center; color: #fff; width: 95%; position: relative; 
+            display: flex; flex-direction: column; justify-content: center; overflow: hidden;
+            transition: 0.2s;
         }
         .map-unit.a { border-color: var(--cyan); color: var(--cyan); }
         .map-unit.b { border-color: var(--red); color: var(--red); }
-        .map-unit.dead { opacity: 0.2; filter: grayscale(1); border-color: #334155; color: #64748b; }
-        .map-unit span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; margin-bottom: 4px; }
+        .map-unit.dead { opacity: 0.15; filter: grayscale(1); border-color: #334155; color: #64748b; }
+        .map-unit span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; font-weight: bold; }
         
-        /* マップ極小バー（2色分割） */
-        .m-bar-container { display: flex; flex-direction: column; gap: 2px; }
-        .m-bar { height: 3px; background: #1e293b; border-radius: 1.5px; width: 100%; display: flex; overflow: hidden; }
-        .m-fill-hp { background: var(--green); transition: width 0.3s; }
-        .m-fill-faint { background: var(--orange); transition: width 0.3s; }
-        .m-fill-mor { background: var(--blue); transition: width 0.3s; }
+        .m-bar-container { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; }
+        .m-bar { height: 2px; background: #000; border-radius: 1px; width: 100%; display: flex; }
+        .m-fill-hp { background: var(--green); } .m-fill-faint { background: var(--orange); } .m-fill-mor { background: var(--blue); }
 
         @keyframes pulse-atk { 0% { transform: scale(1); background: #fff; color: #000; } 100% { transform: scale(1); } }
         @keyframes pulse-def { 0% { transform: translateX(3px); background: #9f1239; } 50% { transform: translateX(-3px); } 100% { transform: translateX(0); } }
         @keyframes pulse-heal { 0% { background: var(--green); color: #000; } 100% { background: inherit; } }
-        
         .anim-atk { animation: pulse-atk 0.3s ease-out; z-index: 10; }
         .anim-def { animation: pulse-def 0.3s ease-out; }
         .anim-heal { animation: pulse-heal 0.3s ease-out; }
@@ -99,64 +103,66 @@
         /* --- リストとログ --- */
         .bottom-area { display: flex; gap: 12px; flex: 1.2; min-height: 0; }
         .list-area { flex: 1; overflow-y: auto; padding-right: 5px; }
-        .log-area { flex: 1.5; background: #010409; overflow-y: auto; padding: 10px; font-size: 11px; line-height: 1.5; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; }
+        .log-area { flex: 1.4; background: #010409; overflow-y: auto; padding: 10px; font-size: 11px; line-height: 1.4; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; }
         
-        .unit-card { background: #161b22; border-radius: 4px; padding: 8px; margin-bottom: 8px; border-left: 3px solid #30363d; font-size: 11px; position: relative; }
+        .unit-card { background: #161b22; border-radius: 4px; padding: 6px; margin-bottom: 6px; border-left: 3px solid #30363d; font-size: 11px; }
         .unit-card.a { border-left-color: var(--cyan); } .unit-card.b { border-left-color: var(--red); }
-        
-        /* リストの3色バー復活 */
-        .bar-wrap { height: 12px; background: #1e293b; border-radius: 3px; margin-top: 5px; position: relative; display: flex; overflow: hidden; }
+        .bar-wrap { height: 10px; background: #1e293b; border-radius: 2px; margin-top: 4px; position: relative; display: flex; overflow: hidden; }
         .bar-hp { background: var(--green); transition: width 0.3s; }
         .bar-faint { background: var(--orange); transition: width 0.3s; }
         .bar-dead { background: var(--gray); transition: width 0.3s; }
         .bar-morale { background: var(--blue); transition: width 0.3s; }
-        .bar-text { position: absolute; width: 100%; text-align: center; font-size: 9px; line-height: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 1px #000; }
+        .bar-text { position: absolute; width: 100%; text-align: center; font-size: 8px; line-height: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 1px #000; }
         
         .log-turn { color: var(--yellow); font-weight: bold; border-bottom: 1px dashed #334155; margin: 8px 0 4px 0; padding-bottom: 2px; }
         .log-atk { color: #d2a8ff; } .log-dmg { color: #8b949e; } .log-fatal { color: var(--red); font-weight: bold; }
         .log-route { background: #7f1d1d; color: #fff; padding: 1px 4px; border-radius: 2px; font-weight: bold; display: inline-block; margin-top: 2px; }
-        .faction-header { background: #1e293b; color: var(--yellow); font-size: 10px; font-weight: bold; padding: 4px 8px; margin: 10px 0 6px 0; border-left: 3px solid var(--yellow); border-radius: 2px; }
+        .faction-header { background: #1e293b; color: var(--yellow); font-size: 10px; font-weight: bold; padding: 3px 6px; margin: 8px 0 4px 0; border-left: 3px solid var(--yellow); border-radius: 2px; }
     </style>
 </head>
 <body>
 
-    <h1>TACTICAL COMMAND DUAL Ver17.0</h1>
+    <h1>TACTICAL COMMAND DUAL Ver18.0</h1>
 
     <div class="layout">
-        <div class="side-panel">
+        <div class="side-panel" id="side-panel">
             <div class="panel" style="flex: 1;">
                 <div class="panel-title">DATABASE & SETUP</div>
-                
                 <div class="trait-toggle-panel" style="margin-bottom: 8px; padding: 6px;">
                     <div class="toggle-row">
                         <span>🔊 サウンド効果</span>
                         <label class="switch"><input type="checkbox" id="toggle-sfx" checked><span class="slider"></span></label>
                     </div>
                 </div>
-
                 <div class="setup-area" id="setup-list"></div>
-                
-                <div style="margin-top: 10px; border-top: 1px solid #1e293b; padding-top: 10px;">
-                    <button id="btn-start" class="btn-main" onclick="startBattle()">⚔ MISSION START</button>
-                    <div class="ctrl-row">
-                        <button style="background:var(--blue); color:#fff; flex:1;" id="btn-next" onclick="runTurn()" disabled>⏭ NEXT TURN</button>
-                        <button style="background:var(--yellow); color:#000; flex:1;" id="btn-auto" onclick="toggleAuto()" disabled>⏩ AUTO RUN</button>
-                    </div>
-                    <button style="background:transparent; border:1px solid var(--red); color:var(--red); width:100%; margin-top:8px;" onclick="resetGame()">🔄 SYSTEM RESET</button>
-                </div>
             </div>
         </div>
 
         <div class="main-panel">
-            <div id="battlefield-container">
-                <canvas id="attack-canvas"></canvas>
-                <div class="battlefield">
-                    <div class="map-zone" id="zone-a-back"></div>
-                    <div class="map-zone" id="zone-a-front"></div>
-                    <div class="map-center"></div>
-                    <div class="map-zone" id="zone-b-front"></div>
-                    <div class="map-zone" id="zone-b-back"></div>
+            <div class="panel map-panel" style="flex:1.5; padding:0; border:none; background:transparent;">
+                <div id="battlefield-container">
+                    <canvas id="attack-canvas"></canvas>
+                    <div class="battlefield">
+                        <div class="map-zone" id="zone-a-4"></div>
+                        <div class="map-zone" id="zone-a-3"></div>
+                        <div class="map-zone" id="zone-a-2"></div>
+                        <div class="map-zone" id="zone-a-1"></div>
+                        
+                        <div class="map-center"></div>
+                        
+                        <div class="map-zone" id="zone-b-1"></div>
+                        <div class="map-zone" id="zone-b-2"></div>
+                        <div class="map-zone" id="zone-b-3"></div>
+                        <div class="map-zone" id="zone-b-4"></div>
+                    </div>
                 </div>
+            </div>
+
+            <div class="control-bar" id="control-bar">
+                <button id="btn-start" class="btn-main" onclick="startBattle()">⚔ MISSION START (戦闘開始)</button>
+                <button id="btn-next" style="display:none; background:var(--blue); color:#fff;" onclick="runTurn()" disabled>⏭ NEXT TURN</button>
+                <button id="btn-auto" style="display:none; background:var(--yellow); color:#000;" onclick="toggleAuto()" disabled>⏩ AUTO RUN</button>
+                <button id="btn-reset" style="display:none;" class="btn-reset" onclick="resetGame()">🔄 ユニットリセット</button>
             </div>
             
             <div class="bottom-area">
@@ -165,7 +171,7 @@
                     <div id="list-a"></div>
                 </div>
                 <div class="log-area" id="log-area">
-                    <div style="color:var(--text-muted);">SYSTEM ONLINE. 3色ステータスバーを復元しました。</div>
+                    <div style="color:var(--text-muted);">SYSTEM ONLINE. 部隊を配備して開始してください。</div>
                 </div>
                 <div class="panel list-area">
                     <div class="panel-title" id="title-b" style="color:var(--red); border-color:var(--red);">FORCE B</div>
@@ -292,7 +298,7 @@
                         </div>
                         <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
                             <span style="color: var(--cyan); font-style: italic;">「鉄鎖の他に失うものなし！ 武器を取れ！」</span><br>
-                            <span style="color: #cbd5e1;">【効果】オンにすると、2ターンに1度「革命労働者中隊(100名)」が戦線へ自動的に増援される。</span>
+                            <span style="color: #cbd5e1;">【効果】オンにすると、2ターンに1度「革命労働者中隊(100名)」が戦線へ自動増援される。</span>
                         </div>
                     </div>`;
                 }
@@ -320,7 +326,7 @@
                             </div>
                             ${traitsHtml}
                             <div class="ctrl-row">
-                                <select id="eq-${sid}"><option value="none">装備なし</option><option value="mg">機関銃(+2D1特殊)</option><option value="sp">スコップ(+1装甲)</option></select>
+                                <select id="eq-${sid}"><option value="none">装備なし</option><option value="mg">機関銃(+2D1特殊)</option><option value="sp">塹壕スコップ(+1装甲)</option></select>
                                 <input type="number" id="ct-${sid}" value="1" min="1" max="10">
                                 <button class="btn-a" onclick="addUnit('${faction}','${key}','${sid}','A')">Aへ配備</button>
                                 <button class="btn-b" onclick="addUnit('${faction}','${key}','${sid}','B')">Bへ配備</button>
@@ -335,7 +341,7 @@
             if(isBattling) return;
             let d = DATABASE[fac][key], c = parseInt(document.getElementById(`ct-${sid}`).value), eq = document.getElementById(`eq-${sid}`).value;
             if(eq==='mg' && (!key.includes('歩兵') || d.size!==600)) { alert("機関銃は歩兵大隊専用です。"); return; }
-            if(eq==='sp' && d.arm>0) { alert("スコップは無装甲専用です。"); return; }
+            if(eq==='sp' && d.arm>0) { alert("塹壕スコップは無装甲専用です。"); return; }
             
             for(let i=0; i<c; i++){
                 let name = key.replace('〇', Math.floor(Math.random()*84)+1);
@@ -346,6 +352,8 @@
             }
             updateUI();
         }
+
+        const CAT_TO_ZONE = { "最前衛部隊": 1, "後援部隊": 2, "特殊部隊": 3, "最後衛部隊": 4 };
 
         function updateUI() {
             ["A", "B"].forEach(tid => {
@@ -360,16 +368,10 @@
                         let active = u.getActive(), faint = u.getFaint(), dead = u.getDead();
                         stats.a+=active; stats.f+=faint; stats.d+=dead;
                         
-                        // ★ 3色バーの割合計算
-                        let aPct = (active/u.size)*100;
-                        let fPct = (faint/u.size)*100;
-                        let dPct = (dead/u.size)*100;
-                        
+                        let aPct = (active/u.size)*100; let fPct = (faint/u.size)*100; let dPct = (dead/u.size)*100;
                         let mPct = u.max_morale==="/"?100:Math.max(0,(u.morale/u.max_morale)*100);
                         
-                        // ステータステキストの判定
-                        let statusText = "戦闘中";
-                        let statusColor = "var(--green)";
+                        let statusText = "戦闘中"; let statusColor = "var(--green)";
                         if(dead >= u.size) { statusText = "全滅"; statusColor = "var(--gray)"; }
                         else if(u.isRouted) { statusText = "敗走"; statusColor = "var(--red)"; }
                         else if(u.max_morale === "/") { statusText = "死守"; statusColor = "var(--red)"; }
@@ -384,9 +386,7 @@
                                 </div>
                             </div>
                             <div class="bar-wrap">
-                                <div class="bar-hp" style="width:${aPct}%"></div>
-                                <div class="bar-faint" style="width:${fPct}%"></div>
-                                <div class="bar-dead" style="width:${dPct}%"></div>
+                                <div class="bar-hp" style="width:${aPct}%"></div><div class="bar-faint" style="width:${fPct}%"></div><div class="bar-dead" style="width:${dPct}%"></div>
                                 <div class="bar-text">生存:${active} / 気絶:${faint} / 死者:${dead}</div>
                             </div>
                             <div class="bar-wrap">
@@ -399,24 +399,39 @@
                 document.getElementById(`title-${tid.toLowerCase()}`).innerHTML = `FORCE ${tid} <span style="font-size:10px; color:var(--text-muted); font-weight:normal;">(兵力:${stats.a})</span>`;
             });
 
-            // マップ描画 (極小バーも生存/気絶に分割)
+            // ★ 修正: フォーメーション・マップ配置と動的リサイズ
             document.querySelectorAll('.map-zone').forEach(z => z.innerHTML='');
+            
+            // ゾーンごとにユニット数を数える
+            let zoneCounts = {};
             [...teams.A, ...teams.B].forEach(u => {
                 let s = u.team.toLowerCase();
-                let z = (u.category.includes('後援') || u.category.includes('最後衛')) ? `zone-${s}-back` : `zone-${s}-front`;
+                let zId = `zone-${s}-${CAT_TO_ZONE[u.category]}`;
+                if(!zoneCounts[zId]) zoneCounts[zId] = 0;
+                zoneCounts[zId]++;
+            });
+
+            [...teams.A, ...teams.B].forEach(u => {
+                let s = u.team.toLowerCase();
+                let zId = `zone-${s}-${CAT_TO_ZONE[u.category]}`;
+                let countInZone = zoneCounts[zId];
+
+                // 数に応じてアイコンの高さや文字サイズを極小まで下げる
+                let h = countInZone > 30 ? "16px" : (countInZone > 15 ? "22px" : "32px");
+                let fz = countInZone > 30 ? "6px" : (countInZone > 15 ? "7px" : "9px");
                 
+                let shortName = u.name.replace('大隊','').replace('中隊','').replace('小隊','');
+                if(countInZone > 15) shortName = shortName.replace('第',''); // 更に短く
+
                 let aPct = (u.getActive()/u.size)*100;
                 let fPct = (u.getFaint()/u.size)*100;
                 let mP = u.max_morale==="/"?100:Math.max(0,(u.morale/u.max_morale)*100);
                 
-                document.getElementById(z).innerHTML += `
-                    <div class="map-unit ${s} ${u.isAlive()?'':'dead'}" id="map-${u.id}">
-                        <span>${u.name.split(' ')[0]}</span>
+                document.getElementById(zId).innerHTML += `
+                    <div class="map-unit ${s} ${u.isAlive()?'':'dead'}" id="map-${u.id}" style="min-height:${h}; font-size:${fz}; padding:1px;">
+                        <span>${shortName}</span>
                         <div class="m-bar-container">
-                            <div class="m-bar">
-                                <div class="m-fill-hp" style="width:${aPct}%"></div>
-                                <div class="m-fill-faint" style="width:${fPct}%"></div>
-                            </div>
+                            <div class="m-bar"><div class="m-fill-hp" style="width:${aPct}%"></div><div class="m-fill-faint" style="width:${fPct}%"></div></div>
                             <div class="m-bar"><div class="m-fill-mor" style="width:${mP}%"></div></div>
                         </div>
                     </div>`;
@@ -464,17 +479,35 @@
             }
             if(audioCtx.state === 'suspended') audioCtx.resume();
             isBattling = true; 
-            document.getElementById("btn-start").disabled = true; 
+            
+            // ★ 修正: バトル開始時にサイドパネルを格納し、UIを切り替える
+            document.getElementById("side-panel").style.display = "none";
+            document.getElementById("btn-start").style.display = "none"; 
+            document.getElementById("btn-next").style.display = "block"; 
             document.getElementById("btn-next").disabled = false; 
+            document.getElementById("btn-auto").style.display = "block"; 
             document.getElementById("btn-auto").disabled = false; 
-            document.getElementById("log-area").innerHTML = `<div style="color:var(--green); font-weight:bold;">⚔ MISSION START ⚔</div>`;
+            document.getElementById("btn-reset").style.display = "block"; 
+
+            document.getElementById("log-area").innerHTML = `<div style="color:var(--green); font-weight:bold; font-size:14px;">⚔ MISSION START ⚔</div>`;
             updateUI(); 
+            // キャンバスのリサイズを確実に行うためのディレイ
+            setTimeout(updateUI, 100); 
         }
 
         function toggleAuto() { 
             if(!isBattling) return;
             autoMode = !autoMode; 
-            document.getElementById("btn-auto").innerHTML = autoMode?"⏸ PAUSE":"⏩ AUTO RUN"; 
+            let btn = document.getElementById("btn-auto");
+            if (autoMode) {
+                btn.innerHTML = "⏸ PAUSE";
+                btn.style.background = "#eab308"; // yellow
+                btn.style.color = "#000";
+            } else {
+                btn.innerHTML = "⏩ AUTO RUN";
+                btn.style.background = ""; // cssに任せる
+                btn.style.color = "";
+            }
             if(autoMode && !isProcessing) runTurn(); 
         }
 
