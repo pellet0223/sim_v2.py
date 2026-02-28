@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL COMMAND DUAL - Ver18.0</title>
+    <title>TACTICAL COMMAND DUAL - Ver19.0</title>
     <style>
         :root {
             --bg-dark: #020617; --panel-bg: #0f172a; --panel-border: #1e293b;
@@ -62,7 +62,7 @@
         .btn-main { background: var(--green); color: #000; }
         .btn-reset { background: transparent; border: 1px solid var(--red); color: var(--red); }
 
-        /* --- レーダーマップ改善 (フォーメーション配置) --- */
+        /* --- レーダーマップ --- */
         #battlefield-container { flex: 1.5; position: relative; background: #000; border: 1px solid #334155; border-radius: 8px; overflow: hidden; min-height: 250px; }
         #attack-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
         .battlefield { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-between; padding: 10px 4px; gap: 4px; }
@@ -79,7 +79,7 @@
         #zone-a-1::before, #zone-b-1::before { content: "最前衛"; }
 
         .map-unit { 
-            background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.4); padding: 2px; 
+            background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.4); padding: 2px 4px; 
             border-radius: 2px; text-align: center; color: #fff; width: 95%; position: relative; 
             display: flex; flex-direction: column; justify-content: center; overflow: hidden;
             transition: 0.2s;
@@ -87,9 +87,10 @@
         .map-unit.a { border-color: var(--cyan); color: var(--cyan); }
         .map-unit.b { border-color: var(--red); color: var(--red); }
         .map-unit.dead { opacity: 0.15; filter: grayscale(1); border-color: #334155; color: #64748b; }
+        /* 文字省略をなくし、はみ出し時は改行せずに詰めるか、スッキリさせる */
         .map-unit span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; font-weight: bold; }
         
-        .m-bar-container { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; }
+        .m-bar-container { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
         .m-bar { height: 2px; background: #000; border-radius: 1px; width: 100%; display: flex; }
         .m-fill-hp { background: var(--green); } .m-fill-faint { background: var(--orange); } .m-fill-mor { background: var(--blue); }
 
@@ -122,7 +123,7 @@
 </head>
 <body>
 
-    <h1>TACTICAL COMMAND DUAL Ver18.0</h1>
+    <h1>TACTICAL COMMAND DUAL Ver19.0</h1>
 
     <div class="layout">
         <div class="side-panel" id="side-panel">
@@ -171,7 +172,7 @@
                     <div id="list-a"></div>
                 </div>
                 <div class="log-area" id="log-area">
-                    <div style="color:var(--text-muted);">SYSTEM ONLINE. 部隊を配備して開始してください。</div>
+                    <div style="color:var(--text-muted);">SYSTEM ONLINE. 命中失敗システム稼働中。</div>
                 </div>
                 <div class="panel list-area">
                     <div class="panel-title" id="title-b" style="color:var(--red); border-color:var(--red);">FORCE B</div>
@@ -186,6 +187,7 @@
         const roll100 = () => Math.floor(Math.random() * 100) + 1;
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+        // 🔊 音声エンジン
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSfx(type) {
             const sfxCheckbox = document.getElementById('toggle-sfx');
@@ -197,6 +199,7 @@
                 const now = audioCtx.currentTime;
                 switch(type) {
                     case 'hit': o.type = 'square'; o.frequency.setValueAtTime(120, now); o.frequency.exponentialRampToValueAtTime(40, now + 0.1); g.gain.setValueAtTime(0.01, now); g.gain.linearRampToValueAtTime(0, now + 0.1); break;
+                    case 'miss': o.type = 'triangle'; o.frequency.setValueAtTime(800, now); o.frequency.exponentialRampToValueAtTime(300, now + 0.1); g.gain.setValueAtTime(0.01, now); g.gain.linearRampToValueAtTime(0, now + 0.1); break; // 追加：ミス時のシュッという音
                     case 'pierce': o.type = 'sawtooth'; o.frequency.setValueAtTime(400, now); o.frequency.linearRampToValueAtTime(800, now + 0.05); g.gain.setValueAtTime(0.008, now); g.gain.linearRampToValueAtTime(0, now + 0.15); break;
                     case 'heal': o.type = 'sine'; o.frequency.setValueAtTime(659, now); g.gain.setValueAtTime(0.01, now); g.gain.linearRampToValueAtTime(0, now + 0.2); break;
                     case 'purge': o.type = 'sawtooth'; o.frequency.setValueAtTime(40, now); g.gain.setValueAtTime(0.02, now); g.gain.linearRampToValueAtTime(0, now + 0.4); break;
@@ -220,7 +223,7 @@
                 "第〇歩兵大隊": { size: 600, cat: "最前衛部隊", morale: 50, agi: 30, arm: 0, hp: 10, fail: 40, gen: [1, 1], spc: [1, 3], reck: [1, 3], traits: ["革命万歳"] },
                 "第〇政治監査委員中隊": { size: 100, cat: "後援部隊", morale: 200, agi: 30, arm: 0, hp: 10, fail: 30, gen: [1, 1], spc: [1, 2], reck: [1, 2], traits: ["革命万歳", "粛清"] },
                 "第〇機動装甲中隊": { size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 50, gen: [1, 4], spc: [2, 3], reck: [3, 3], traits: ["革命万歳"] },
-                "第〇衛生中隊": { size: 100, cat: "後援部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 10, gen: [2, 2], spc: [3, 3], reck: [4, 5], traits: ["衛生兵"] },
+                "第〇衛生中隊": { size: 100, cat: "後援部隊", morale: 100, agi: 80, arm: 0, hp: 10, fail: 10, gen: [2, 2], spc: [3, 3], reck: [4, 5], traits: ["衛生兵"] }, // ★ 修正: 衛生兵の装甲を0に
                 "第〇支援砲兵中隊": { size: 100, cat: "最後衛部隊", morale: 60, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 6], spc: [1, 8], reck: [1, 4], traits: ["貫徹"] }
             },
             "全土カルヴェナ革命戦線": {
@@ -250,8 +253,10 @@
             getFaint() { return this.statusList.filter(s => s === 1 || s === 2).length; }
             getDead() { return this.statusList.filter(s => s === -1).length; }
             isAlive() { return (this.max_morale === "/" || !this.isRouted) && this.statusList.some(s => s !== -1); }
+            
+            // ★ 修正: 命中失敗判定をダメージ処理から切り離し、呼び出し側で行うように変更
             takeDamage(dmg, isPiercing = false) {
-                if (!this.isAlive() || roll100() <= this.fail) return { hit: false, killed: false };
+                if (!this.isAlive()) return { hit: false, killed: false };
                 let actualDmg = Math.min(Math.max(0, dmg - (isPiercing ? 0 : this.arm)), this.hp);
                 let targets = []; for(let i=0; i<this.size; i++) if(this.statusList[i] >= 0) targets.push(i);
                 if(targets.length === 0) return { hit: false, killed: false };
@@ -311,11 +316,12 @@
                         traitsHtml = `<div class="trait-box"><span style="color:var(--cyan); font-weight:bold;">◆ 特性解説</span><ul>${traitItems}</ul></div>`;
                     }
 
+                    // ★ 修正: 「兵科」から「配置場所」へ変更
                     html += `<details class="unit-details"><summary class="unit-summary">${key}</summary>
                         <div class="preset-info">
                             <div class="flavor-text">"${data.desc}"</div>
                             <div class="stat-grid">
-                                <div>兵科: ${data.cat}</div><div>規模: ${data.size}</div>
+                                <div>配置場所: ${data.cat}</div><div>規模: ${data.size}</div>
                                 <div>士気: ${data.morale}</div><div>装甲: ${data.arm}</div>
                                 <div>HP: ${data.hp}</div><div>失敗率: ${data.fail}%</div>
                             </div>
@@ -399,29 +405,21 @@
                 document.getElementById(`title-${tid.toLowerCase()}`).innerHTML = `FORCE ${tid} <span style="font-size:10px; color:var(--text-muted); font-weight:normal;">(兵力:${stats.a})</span>`;
             });
 
-            // ★ 修正: フォーメーション・マップ配置と動的リサイズ
             document.querySelectorAll('.map-zone').forEach(z => z.innerHTML='');
-            
-            // ゾーンごとにユニット数を数える
             let zoneCounts = {};
             [...teams.A, ...teams.B].forEach(u => {
-                let s = u.team.toLowerCase();
-                let zId = `zone-${s}-${CAT_TO_ZONE[u.category]}`;
-                if(!zoneCounts[zId]) zoneCounts[zId] = 0;
-                zoneCounts[zId]++;
+                let s = u.team.toLowerCase(); let zId = `zone-${s}-${CAT_TO_ZONE[u.category]}`;
+                if(!zoneCounts[zId]) zoneCounts[zId] = 0; zoneCounts[zId]++;
             });
 
             [...teams.A, ...teams.B].forEach(u => {
-                let s = u.team.toLowerCase();
-                let zId = `zone-${s}-${CAT_TO_ZONE[u.category]}`;
+                let s = u.team.toLowerCase(); let zId = `zone-${s}-${CAT_TO_ZONE[u.category]}`;
                 let countInZone = zoneCounts[zId];
-
-                // 数に応じてアイコンの高さや文字サイズを極小まで下げる
+                
+                // ★ 修正: 文字省略をせず、大隊・中隊を表示したままサイズを下げる
                 let h = countInZone > 30 ? "16px" : (countInZone > 15 ? "22px" : "32px");
                 let fz = countInZone > 30 ? "6px" : (countInZone > 15 ? "7px" : "9px");
-                
-                let shortName = u.name.replace('大隊','').replace('中隊','').replace('小隊','');
-                if(countInZone > 15) shortName = shortName.replace('第',''); // 更に短く
+                let shortName = u.name;
 
                 let aPct = (u.getActive()/u.size)*100;
                 let fPct = (u.getFaint()/u.size)*100;
@@ -442,72 +440,39 @@
             const canvas = document.getElementById('attack-canvas');
             const ctx = canvas.getContext('2d');
             const parent = canvas.parentElement;
-            
-            canvas.width = parent.clientWidth;
-            canvas.height = parent.clientHeight;
-            
-            const el1 = document.getElementById(`map-${atkId}`);
-            const el2 = document.getElementById(`map-${tgtId}`);
+            canvas.width = parent.clientWidth; canvas.height = parent.clientHeight;
+            const el1 = document.getElementById(`map-${atkId}`), el2 = document.getElementById(`map-${tgtId}`);
             if(!el1 || !el2) return;
-
-            const r1 = el1.getBoundingClientRect();
-            const r2 = el2.getBoundingClientRect();
-            const pRect = parent.getBoundingClientRect();
-
-            const x1 = r1.left - pRect.left + r1.width/2;
-            const y1 = r1.top - pRect.top + r1.height/2;
-            const x2 = r2.left - pRect.left + r2.width/2;
-            const y2 = r2.top - pRect.top + r2.height/2;
-
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.lineWidth = 2;
+            const r1 = el1.getBoundingClientRect(), r2 = el2.getBoundingClientRect(), pRect = parent.getBoundingClientRect();
+            const x1 = r1.left - pRect.left + r1.width/2, y1 = r1.top - pRect.top + r1.height/2;
+            const x2 = r2.left - pRect.left + r2.width/2, y2 = r2.top - pRect.top + r2.height/2;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineWidth = 2;
             ctx.strokeStyle = type === 'heal' ? 'rgba(74, 222, 128, 0.9)' : 'rgba(251, 113, 133, 0.9)';
-            if(type === 'atk') ctx.setLineDash([4, 4]); 
-            ctx.stroke();
-
+            if(type === 'atk') ctx.setLineDash([4, 4]); ctx.stroke();
             setTimeout(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); }, 300);
         }
 
         function removeUnit(t, id) { teams[t] = teams[t].filter(u => u.id !== id); updateUI(); }
         
         function startBattle() { 
-            if(teams.A.length===0 || teams.B.length===0) {
-                alert("司令官、両軍に最低1つ以上の部隊を配備してください！");
-                return; 
-            }
+            if(teams.A.length===0 || teams.B.length===0) { alert("司令官、両軍に最低1つ以上の部隊を配備してください！"); return; }
             if(audioCtx.state === 'suspended') audioCtx.resume();
             isBattling = true; 
-            
-            // ★ 修正: バトル開始時にサイドパネルを格納し、UIを切り替える
             document.getElementById("side-panel").style.display = "none";
             document.getElementById("btn-start").style.display = "none"; 
-            document.getElementById("btn-next").style.display = "block"; 
-            document.getElementById("btn-next").disabled = false; 
-            document.getElementById("btn-auto").style.display = "block"; 
-            document.getElementById("btn-auto").disabled = false; 
+            document.getElementById("btn-next").style.display = "block"; document.getElementById("btn-next").disabled = false; 
+            document.getElementById("btn-auto").style.display = "block"; document.getElementById("btn-auto").disabled = false; 
             document.getElementById("btn-reset").style.display = "block"; 
-
             document.getElementById("log-area").innerHTML = `<div style="color:var(--green); font-weight:bold; font-size:14px;">⚔ MISSION START ⚔</div>`;
-            updateUI(); 
-            // キャンバスのリサイズを確実に行うためのディレイ
-            setTimeout(updateUI, 100); 
+            updateUI(); setTimeout(updateUI, 100); 
         }
 
         function toggleAuto() { 
             if(!isBattling) return;
             autoMode = !autoMode; 
             let btn = document.getElementById("btn-auto");
-            if (autoMode) {
-                btn.innerHTML = "⏸ PAUSE";
-                btn.style.background = "#eab308"; // yellow
-                btn.style.color = "#000";
-            } else {
-                btn.innerHTML = "⏩ AUTO RUN";
-                btn.style.background = ""; // cssに任せる
-                btn.style.color = "";
-            }
+            if (autoMode) { btn.innerHTML = "⏸ PAUSE"; btn.style.background = "#eab308"; btn.style.color = "#000"; } 
+            else { btn.innerHTML = "⏩ AUTO RUN"; btn.style.background = ""; btn.style.color = ""; }
             if(autoMode && !isProcessing) runTurn(); 
         }
 
@@ -552,28 +517,50 @@
                 }
                 if(!target) continue;
 
-                const aEl = document.getElementById(`map-${atk.id}`), tEl = document.getElementById(`map-${target.id}`);
-                if(aEl) aEl.classList.add('anim-atk'); if(tEl) tEl.classList.add(isM?'anim-heal':'anim-def');
-                drawAttackLine(atk.id, target.id, isM ? 'heal' : 'atk');
-                if(isM) playSfx('heal'); else if(isP) playSfx('pierce'); else playSfx('hit');
-                await sleep(350);
-                if(aEl) aEl.classList.remove('anim-atk'); if(tEl) tEl.classList.remove(isM?'anim-heal':'anim-def');
-
+                // ★ 修正: 攻撃側の「命中失敗」判定を事前に行い、結果に応じて音を変える
                 let rollV = roll(6), type = rollV===1?"特殊":(rollV===6?"無謀":"通常");
                 let [dN, dS] = atk.dice[type==="通常"?"通常攻撃":(type==="特殊"?"特殊攻撃":"無謀な攻撃")];
-                let hits = 0, kills = 0, revs = 0, selfK = 0, count = atk.getActive();
+                let hits = 0, misses = 0, kills = 0, revs = 0, selfK = 0, count = atk.getActive();
 
                 for(let i=0; i<count; i++){
+                    // ★ 攻撃側の命中失敗率判定
+                    if (roll100() <= atk.fail) {
+                        misses++;
+                        // 無謀な攻撃は外れても自傷ダメージ判定を別途受ける
+                        if (type === "無謀" && roll100() > 50) selfK++; // 簡易的に50%で自傷
+                        continue;
+                    }
+                    // 命中した場合
                     let d = 0; for(let j=0; j<dN; j++) d += roll(dS);
-                    if(isM){ if(target.receiveHealing(d)) revs++; if(type==="無謀" && atk.takeDamage(Math.floor(d*0.3)).killed) selfK++; }
-                    else {
+                    if(isM){ 
+                        if(target.receiveHealing(d)) revs++; 
+                        if(type==="無謀" && atk.takeDamage(Math.floor(d*0.3)).killed) selfK++; 
+                    } else {
                         let res = target.takeDamage(d, isP);
                         if(res.hit) hits++; if(res.killed) kills++;
                         if(type==="無謀" && atk.takeDamage(Math.floor(d*0.3)).killed) selfK++;
                     }
                 }
+
+                // 演出の実行
+                const aEl = document.getElementById(`map-${atk.id}`), tEl = document.getElementById(`map-${target.id}`);
+                if(aEl) aEl.classList.add('anim-atk'); if(tEl && hits > 0) tEl.classList.add(isM?'anim-heal':'anim-def');
+                drawAttackLine(atk.id, target.id, isM ? 'heal' : 'atk');
                 
-                let resTxt = isM ? `<span style="color:var(--green)">復帰:${revs}</span>` : `有効:${hits} <span class="log-fatal">死:${kills}</span>`;
+                // ★ 修正: 音の出し分け（ヒットが無ければミス音）
+                if (isM) {
+                    playSfx('heal'); 
+                } else if (hits === 0 && misses > 0) {
+                    playSfx('miss'); // 全弾外れ
+                } else {
+                    if (isP) playSfx('pierce'); else playSfx('hit');
+                }
+
+                await sleep(350);
+                if(aEl) aEl.classList.remove('anim-atk'); if(tEl) tEl.classList.remove(isM?'anim-heal':'anim-def');
+
+                // ログ出力の改善
+                let resTxt = isM ? `<span style="color:var(--green)">復帰:${revs}</span> / ミス:${misses}` : `有効:${hits} / <span style="color:var(--orange)">ミス:${misses}</span> / <span class="log-fatal">死:${kills}</span>`;
                 if(selfK>0) resTxt += ` | 自損:${selfK}`;
                 log(`[${atk.name}] ${type} -> [${target.name}]<br>&nbsp;&nbsp;└ ${resTxt}`, 'log-dmg');
                 updateUI();
@@ -594,7 +581,13 @@
 
             turn++; updateUI(); isProcessing = false;
             let winA = teams.B.every(u => !u.isAlive()), winB = teams.A.every(u => !u.isAlive());
-            if(winA || winB){ autoMode = false; playSfx('win'); log(`🏆 終結: ${winA?'FORCE A':'FORCE B'}の勝利！`, 'log-turn'); return; }
+            if(winA || winB){ 
+                autoMode = false; playSfx('win'); log(`🏆 終結: ${winA?'FORCE A':'FORCE B'}の勝利！`, 'log-turn'); 
+                // ★ 修正: 勝敗決定後はボタンを完全ロック
+                document.getElementById("btn-next").disabled = true;
+                document.getElementById("btn-auto").disabled = true;
+                return; 
+            }
             if(autoMode) setTimeout(runTurn, 400); else document.getElementById("btn-next").disabled = false;
         }
 
