@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL COMMAND DUAL - Ver19.0</title>
+    <title>TACTICAL COMMAND DUAL - Ver19.1</title>
     <style>
         :root {
             --bg-dark: #020617; --panel-bg: #0f172a; --panel-border: #1e293b;
@@ -30,7 +30,8 @@
         summary:hover { background: #1f2937; }
         .unit-info-box { padding: 8px; background: #0d1117; font-size: 11px; color: var(--text-muted); border-top: 1px solid #30363d; }
         
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px; }
+        /* ステータスグリッドの幅調整（文字のはみ出し防止） */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px; font-size: 10.5px; }
         .stat-grid-atk { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-bottom: 8px; background: #111827; padding: 4px; border-radius: 4px; text-align: center; }
         
         .ctrl-row { display: flex; gap: 4px; margin-top: 8px; align-items: center; }
@@ -87,7 +88,6 @@
         .map-unit.a { border-color: var(--cyan); color: var(--cyan); }
         .map-unit.b { border-color: var(--red); color: var(--red); }
         .map-unit.dead { opacity: 0.15; filter: grayscale(1); border-color: #334155; color: #64748b; }
-        /* 文字省略をなくし、はみ出し時は改行せずに詰めるか、スッキリさせる */
         .map-unit span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; font-weight: bold; }
         
         .m-bar-container { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
@@ -123,7 +123,7 @@
 </head>
 <body>
 
-    <h1>TACTICAL COMMAND DUAL Ver19.0</h1>
+    <h1>TACTICAL COMMAND DUAL Ver19.1</h1>
 
     <div class="layout">
         <div class="side-panel" id="side-panel">
@@ -148,9 +148,7 @@
                         <div class="map-zone" id="zone-a-3"></div>
                         <div class="map-zone" id="zone-a-2"></div>
                         <div class="map-zone" id="zone-a-1"></div>
-                        
                         <div class="map-center"></div>
-                        
                         <div class="map-zone" id="zone-b-1"></div>
                         <div class="map-zone" id="zone-b-2"></div>
                         <div class="map-zone" id="zone-b-3"></div>
@@ -172,7 +170,7 @@
                     <div id="list-a"></div>
                 </div>
                 <div class="log-area" id="log-area">
-                    <div style="color:var(--text-muted);">SYSTEM ONLINE. 命中失敗システム稼働中。</div>
+                    <div style="color:var(--text-muted);">SYSTEM ONLINE. 兵科と命中システムを完全実装。</div>
                 </div>
                 <div class="panel list-area">
                     <div class="panel-title" id="title-b" style="color:var(--red); border-color:var(--red);">FORCE B</div>
@@ -199,7 +197,7 @@
                 const now = audioCtx.currentTime;
                 switch(type) {
                     case 'hit': o.type = 'square'; o.frequency.setValueAtTime(120, now); o.frequency.exponentialRampToValueAtTime(40, now + 0.1); g.gain.setValueAtTime(0.01, now); g.gain.linearRampToValueAtTime(0, now + 0.1); break;
-                    case 'miss': o.type = 'triangle'; o.frequency.setValueAtTime(800, now); o.frequency.exponentialRampToValueAtTime(300, now + 0.1); g.gain.setValueAtTime(0.01, now); g.gain.linearRampToValueAtTime(0, now + 0.1); break; // 追加：ミス時のシュッという音
+                    case 'miss': o.type = 'triangle'; o.frequency.setValueAtTime(800, now); o.frequency.exponentialRampToValueAtTime(300, now + 0.1); g.gain.setValueAtTime(0.01, now); g.gain.linearRampToValueAtTime(0, now + 0.1); break; 
                     case 'pierce': o.type = 'sawtooth'; o.frequency.setValueAtTime(400, now); o.frequency.linearRampToValueAtTime(800, now + 0.05); g.gain.setValueAtTime(0.008, now); g.gain.linearRampToValueAtTime(0, now + 0.15); break;
                     case 'heal': o.type = 'sine'; o.frequency.setValueAtTime(659, now); g.gain.setValueAtTime(0.01, now); g.gain.linearRampToValueAtTime(0, now + 0.2); break;
                     case 'purge': o.type = 'sawtooth'; o.frequency.setValueAtTime(40, now); g.gain.setValueAtTime(0.02, now); g.gain.linearRampToValueAtTime(0, now + 0.4); break;
@@ -218,28 +216,30 @@
             "重鈍": "【特殊】どれだけ機動力が高くても、全ユニットの最後に行動する。"
         };
 
+        // ★ 追加: 新ステータス「兵科(type)」を全ユニットに定義
         const DATABASE = {
             "ラルキア国家社会主義人民共和国": {
-                "第〇歩兵大隊": { size: 600, cat: "最前衛部隊", morale: 50, agi: 30, arm: 0, hp: 10, fail: 40, gen: [1, 1], spc: [1, 3], reck: [1, 3], traits: ["革命万歳"] },
-                "第〇政治監査委員中隊": { size: 100, cat: "後援部隊", morale: 200, agi: 30, arm: 0, hp: 10, fail: 30, gen: [1, 1], spc: [1, 2], reck: [1, 2], traits: ["革命万歳", "粛清"] },
-                "第〇機動装甲中隊": { size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 50, gen: [1, 4], spc: [2, 3], reck: [3, 3], traits: ["革命万歳"] },
-                "第〇衛生中隊": { size: 100, cat: "後援部隊", morale: 100, agi: 80, arm: 0, hp: 10, fail: 10, gen: [2, 2], spc: [3, 3], reck: [4, 5], traits: ["衛生兵"] }, // ★ 修正: 衛生兵の装甲を0に
-                "第〇支援砲兵中隊": { size: 100, cat: "最後衛部隊", morale: 60, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 6], spc: [1, 8], reck: [1, 4], traits: ["貫徹"] }
+                "第〇歩兵大隊": { type: "歩兵", size: 600, cat: "最前衛部隊", morale: 50, agi: 30, arm: 0, hp: 10, fail: 40, gen: [1, 1], spc: [1, 3], reck: [1, 3], traits: ["革命万歳"] },
+                "第〇政治監査委員中隊": { type: "歩兵", size: 100, cat: "後援部隊", morale: 200, agi: 30, arm: 0, hp: 10, fail: 30, gen: [1, 1], spc: [1, 2], reck: [1, 2], traits: ["革命万歳", "粛清"] },
+                "第〇機動装甲中隊": { type: "軽戦車", size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 50, gen: [1, 4], spc: [2, 3], reck: [3, 3], traits: ["革命万歳"] },
+                "第〇衛生中隊": { type: "歩兵", size: 100, cat: "後援部隊", morale: 100, agi: 80, arm: 0, hp: 10, fail: 10, gen: [2, 2], spc: [3, 3], reck: [4, 5], traits: ["衛生兵"] },
+                "第〇支援砲兵中隊": { type: "砲兵", size: 100, cat: "最後衛部隊", morale: 60, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 6], spc: [1, 8], reck: [1, 4], traits: ["貫徹"] }
             },
             "全土カルヴェナ革命戦線": {
-                "第〇革命パルチザン大隊": { size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] }
+                "第〇革命パルチザン大隊": { type: "歩兵", size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] }
             },
             "カルヴェナ帝国": {
-                "第〇正規歩兵大隊": { size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
-                "第〇帝立重装甲中隊": { size: 100, cat: "特殊部隊", morale: 250, agi: 10, arm: 6, hp: 10, fail: 30, gen: [1, 5], spc: [1, 6], reck: [1, 3], traits: ["皇帝陛下万歳", "貫徹", "重鈍"] }
+                "第〇正規歩兵大隊": { type: "歩兵", size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
+                "第〇帝立重装甲中隊": { type: "重戦車", size: 100, cat: "特殊部隊", morale: 250, agi: 10, arm: 6, hp: 10, fail: 30, gen: [1, 5], spc: [1, 6], reck: [1, 3], traits: ["皇帝陛下万歳", "貫徹", "重鈍"] }
             }
         };
 
-        const WORKER_PRESET = { size: 100, cat: "最前衛部隊", morale: 50, agi: 0, arm: 0, hp: 7, fail: 65, gen: [1, 1], spc: [1, 1], reck: [2, 3], traits: ["革命万歳"] };
+        const WORKER_PRESET = { type: "歩兵", size: 100, cat: "最前衛部隊", morale: 50, agi: 0, arm: 0, hp: 7, fail: 65, gen: [1, 1], spc: [1, 1], reck: [2, 3], traits: ["革命万歳"] };
 
         class Unit {
             constructor(name, preset, affiliation, team, id) {
                 this.id = id; this.name = name; this.affiliation = affiliation; this.team = team; 
+                this.type = preset.type;
                 this.category = preset.cat; this.size = preset.size; 
                 this.morale = preset.morale; this.max_morale = preset.morale;
                 this.agi = preset.agi; this.arm = preset.arm; this.hp = preset.hp; this.fail = preset.fail;
@@ -254,7 +254,6 @@
             getDead() { return this.statusList.filter(s => s === -1).length; }
             isAlive() { return (this.max_morale === "/" || !this.isRouted) && this.statusList.some(s => s !== -1); }
             
-            // ★ 修正: 命中失敗判定をダメージ処理から切り離し、呼び出し側で行うように変更
             takeDamage(dmg, isPiercing = false) {
                 if (!this.isAlive()) return { hit: false, killed: false };
                 let actualDmg = Math.min(Math.max(0, dmg - (isPiercing ? 0 : this.arm)), this.hp);
@@ -303,7 +302,7 @@
                         </div>
                         <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
                             <span style="color: var(--cyan); font-style: italic;">「鉄鎖の他に失うものなし！ 武器を取れ！」</span><br>
-                            <span style="color: #cbd5e1;">【効果】オンにすると、2ターンに1度「革命労働者中隊(100名)」が戦線へ自動増援される。</span>
+                            <span style="color: #cbd5e1;">【効果】オンにすると、2ターンに1度「革命労働者中隊(100名)」が自動増援される。</span>
                         </div>
                     </div>`;
                 }
@@ -316,14 +315,16 @@
                         traitsHtml = `<div class="trait-box"><span style="color:var(--cyan); font-weight:bold;">◆ 特性解説</span><ul>${traitItems}</ul></div>`;
                     }
 
-                    // ★ 修正: 「兵科」から「配置場所」へ変更
+                    // ★ 修正: 配置場所（部隊を省く）と兵科を追加、8項目で綺麗に整列
+                    let shortCat = data.cat.replace("部隊", "");
                     html += `<details class="unit-details"><summary class="unit-summary">${key}</summary>
                         <div class="preset-info">
                             <div class="flavor-text">"${data.desc}"</div>
                             <div class="stat-grid">
-                                <div>配置場所: ${data.cat}</div><div>規模: ${data.size}</div>
-                                <div>士気: ${data.morale}</div><div>装甲: ${data.arm}</div>
-                                <div>HP: ${data.hp}</div><div>失敗率: ${data.fail}%</div>
+                                <div>配置: ${shortCat}</div><div>兵科: <span style="color:#fff;">${data.type}</span></div>
+                                <div>規模: ${data.size}</div><div>士気: ${data.morale}</div>
+                                <div>装甲: ${data.arm}</div><div>機動: ${data.agi}</div>
+                                <div>HP: ${data.hp}</div><div>失敗: ${data.fail}%</div>
                             </div>
                             <div class="stat-grid-atk">
                                 <div><span style="color:var(--text-muted)">通常</span><br>${data.gen[0]}D${data.gen[1]}</div>
@@ -332,10 +333,10 @@
                             </div>
                             ${traitsHtml}
                             <div class="ctrl-row">
-                                <select id="eq-${sid}"><option value="none">装備なし</option><option value="mg">機関銃(+2D1特殊)</option><option value="sp">塹壕スコップ(+1装甲)</option></select>
+                                <select id="eq-${sid}"><option value="none">装備なし</option><option value="mg">機関銃(+2D1特殊)</option><option value="sp">スコップ(+1装甲)</option></select>
                                 <input type="number" id="ct-${sid}" value="1" min="1" max="10">
-                                <button class="btn-a" onclick="addUnit('${faction}','${key}','${sid}','A')">Aへ配備</button>
-                                <button class="btn-b" onclick="addUnit('${faction}','${key}','${sid}','B')">Bへ配備</button>
+                                <button class="btn-a" onclick="addUnit('${faction}','${key}','${sid}','A')">Aへ</button>
+                                <button class="btn-b" onclick="addUnit('${faction}','${key}','${sid}','B')">Bへ</button>
                             </div>
                         </div></details>`;
                 }
@@ -416,10 +417,8 @@
                 let s = u.team.toLowerCase(); let zId = `zone-${s}-${CAT_TO_ZONE[u.category]}`;
                 let countInZone = zoneCounts[zId];
                 
-                // ★ 修正: 文字省略をせず、大隊・中隊を表示したままサイズを下げる
                 let h = countInZone > 30 ? "16px" : (countInZone > 15 ? "22px" : "32px");
                 let fz = countInZone > 30 ? "6px" : (countInZone > 15 ? "7px" : "9px");
-                let shortName = u.name;
 
                 let aPct = (u.getActive()/u.size)*100;
                 let fPct = (u.getFaint()/u.size)*100;
@@ -427,7 +426,7 @@
                 
                 document.getElementById(zId).innerHTML += `
                     <div class="map-unit ${s} ${u.isAlive()?'':'dead'}" id="map-${u.id}" style="min-height:${h}; font-size:${fz}; padding:1px;">
-                        <span>${shortName}</span>
+                        <span>${u.name}</span>
                         <div class="m-bar-container">
                             <div class="m-bar"><div class="m-fill-hp" style="width:${aPct}%"></div><div class="m-fill-faint" style="width:${fPct}%"></div></div>
                             <div class="m-bar"><div class="m-fill-mor" style="width:${mP}%"></div></div>
@@ -440,22 +439,41 @@
             const canvas = document.getElementById('attack-canvas');
             const ctx = canvas.getContext('2d');
             const parent = canvas.parentElement;
-            canvas.width = parent.clientWidth; canvas.height = parent.clientHeight;
-            const el1 = document.getElementById(`map-${atkId}`), el2 = document.getElementById(`map-${tgtId}`);
+            
+            canvas.width = parent.clientWidth;
+            canvas.height = parent.clientHeight;
+            
+            const el1 = document.getElementById(`map-${atkId}`);
+            const el2 = document.getElementById(`map-${tgtId}`);
             if(!el1 || !el2) return;
-            const r1 = el1.getBoundingClientRect(), r2 = el2.getBoundingClientRect(), pRect = parent.getBoundingClientRect();
-            const x1 = r1.left - pRect.left + r1.width/2, y1 = r1.top - pRect.top + r1.height/2;
-            const x2 = r2.left - pRect.left + r2.width/2, y2 = r2.top - pRect.top + r2.height/2;
-            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineWidth = 2;
+
+            const r1 = el1.getBoundingClientRect();
+            const r2 = el2.getBoundingClientRect();
+            const pRect = parent.getBoundingClientRect();
+
+            const x1 = r1.left - pRect.left + r1.width/2;
+            const y1 = r1.top - pRect.top + r1.height/2;
+            const x2 = r2.left - pRect.left + r2.width/2;
+            const y2 = r2.top - pRect.top + r2.height/2;
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineWidth = 2;
             ctx.strokeStyle = type === 'heal' ? 'rgba(74, 222, 128, 0.9)' : 'rgba(251, 113, 133, 0.9)';
-            if(type === 'atk') ctx.setLineDash([4, 4]); ctx.stroke();
+            if(type === 'atk') ctx.setLineDash([4, 4]); 
+            ctx.stroke();
+
             setTimeout(() => { ctx.clearRect(0, 0, canvas.width, canvas.height); }, 300);
         }
 
         function removeUnit(t, id) { teams[t] = teams[t].filter(u => u.id !== id); updateUI(); }
         
         function startBattle() { 
-            if(teams.A.length===0 || teams.B.length===0) { alert("司令官、両軍に最低1つ以上の部隊を配備してください！"); return; }
+            if(teams.A.length===0 || teams.B.length===0) {
+                alert("司令官、両軍に最低1つ以上の部隊を配備してください！");
+                return; 
+            }
             if(audioCtx.state === 'suspended') audioCtx.resume();
             isBattling = true; 
             document.getElementById("side-panel").style.display = "none";
@@ -517,20 +535,18 @@
                 }
                 if(!target) continue;
 
-                // ★ 修正: 攻撃側の「命中失敗」判定を事前に行い、結果に応じて音を変える
                 let rollV = roll(6), type = rollV===1?"特殊":(rollV===6?"無謀":"通常");
                 let [dN, dS] = atk.dice[type==="通常"?"通常攻撃":(type==="特殊"?"特殊攻撃":"無謀な攻撃")];
                 let hits = 0, misses = 0, kills = 0, revs = 0, selfK = 0, count = atk.getActive();
 
                 for(let i=0; i<count; i++){
-                    // ★ 攻撃側の命中失敗率判定
+                    // ★命中失敗の判定（ここで外れた場合はダメージ計算を行わない）
                     if (roll100() <= atk.fail) {
                         misses++;
-                        // 無謀な攻撃は外れても自傷ダメージ判定を別途受ける
-                        if (type === "無謀" && roll100() > 50) selfK++; // 簡易的に50%で自傷
+                        if (type === "無謀" && roll100() > 50) selfK++; // 無謀の場合は外れても自傷リスク
                         continue;
                     }
-                    // 命中した場合
+                    
                     let d = 0; for(let j=0; j<dN; j++) d += roll(dS);
                     if(isM){ 
                         if(target.receiveHealing(d)) revs++; 
@@ -542,24 +558,17 @@
                     }
                 }
 
-                // 演出の実行
                 const aEl = document.getElementById(`map-${atk.id}`), tEl = document.getElementById(`map-${target.id}`);
                 if(aEl) aEl.classList.add('anim-atk'); if(tEl && hits > 0) tEl.classList.add(isM?'anim-heal':'anim-def');
                 drawAttackLine(atk.id, target.id, isM ? 'heal' : 'atk');
                 
-                // ★ 修正: 音の出し分け（ヒットが無ければミス音）
-                if (isM) {
-                    playSfx('heal'); 
-                } else if (hits === 0 && misses > 0) {
-                    playSfx('miss'); // 全弾外れ
-                } else {
-                    if (isP) playSfx('pierce'); else playSfx('hit');
-                }
+                if (isM) { playSfx('heal'); } 
+                else if (hits === 0 && misses > 0) { playSfx('miss'); } // 全弾ミスの時の風切り音
+                else { if (isP) playSfx('pierce'); else playSfx('hit'); }
 
                 await sleep(350);
                 if(aEl) aEl.classList.remove('anim-atk'); if(tEl) tEl.classList.remove(isM?'anim-heal':'anim-def');
 
-                // ログ出力の改善
                 let resTxt = isM ? `<span style="color:var(--green)">復帰:${revs}</span> / ミス:${misses}` : `有効:${hits} / <span style="color:var(--orange)">ミス:${misses}</span> / <span class="log-fatal">死:${kills}</span>`;
                 if(selfK>0) resTxt += ` | 自損:${selfK}`;
                 log(`[${atk.name}] ${type} -> [${target.name}]<br>&nbsp;&nbsp;└ ${resTxt}`, 'log-dmg');
@@ -583,9 +592,7 @@
             let winA = teams.B.every(u => !u.isAlive()), winB = teams.A.every(u => !u.isAlive());
             if(winA || winB){ 
                 autoMode = false; playSfx('win'); log(`🏆 終結: ${winA?'FORCE A':'FORCE B'}の勝利！`, 'log-turn'); 
-                // ★ 修正: 勝敗決定後はボタンを完全ロック
-                document.getElementById("btn-next").disabled = true;
-                document.getElementById("btn-auto").disabled = true;
+                document.getElementById("btn-next").disabled = true; document.getElementById("btn-auto").disabled = true; // ★ 戦闘終了後ロック
                 return; 
             }
             if(autoMode) setTimeout(runTurn, 400); else document.getElementById("btn-next").disabled = false;
