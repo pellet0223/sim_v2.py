@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TACTICAL COMMAND DUAL - Ver19.1</title>
+    <title>TACTICAL COMMAND DUAL - Ver21.0</title>
     <style>
         :root {
             --bg-dark: #020617; --panel-bg: #0f172a; --panel-border: #1e293b;
@@ -17,7 +17,7 @@
 
         .layout { display: flex; flex: 1; gap: 12px; min-height: 0; }
         
-        .side-panel { width: 320px; display: flex; flex-direction: column; gap: 12px; min-height: 0; transition: 0.3s ease-out; }
+        .side-panel { width: 330px; display: flex; flex-direction: column; gap: 12px; min-height: 0; transition: 0.3s ease-out; }
         .main-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 0; }
 
         .panel { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; min-height: 0; }
@@ -26,11 +26,10 @@
         /* --- データベース --- */
         .setup-area { flex: 1; overflow-y: auto; padding-right: 5px; min-height: 0; }
         details { background: #161b22; border: 1px solid #30363d; border-radius: 4px; margin-bottom: 6px; }
-        summary { padding: 8px; font-size: 12px; cursor: pointer; color: var(--yellow); font-weight: bold; }
+        summary { padding: 8px; font-size: 11px; cursor: pointer; color: var(--yellow); font-weight: bold; }
         summary:hover { background: #1f2937; }
         .unit-info-box { padding: 8px; background: #0d1117; font-size: 11px; color: var(--text-muted); border-top: 1px solid #30363d; }
         
-        /* ステータスグリッドの幅調整（文字のはみ出し防止） */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 4px; font-size: 10.5px; }
         .stat-grid-atk { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-bottom: 8px; background: #111827; padding: 4px; border-radius: 4px; text-align: center; }
         
@@ -72,7 +71,6 @@
         .map-center { width: 10px; flex-shrink: 0; border-left: 1px dashed rgba(251,113,133,0.3); border-right: 1px dashed rgba(34,211,238,0.3); }
         .map-zone::-webkit-scrollbar { width: 2px; } .map-zone::-webkit-scrollbar-thumb { background: #334155; }
 
-        /* ゾーンの背景文字 */
         .map-zone::before { position: absolute; top: 0; width: 100%; text-align: center; font-size: 9px; color: #475569; font-weight: bold; pointer-events: none; }
         #zone-a-4::before, #zone-b-4::before { content: "最後衛"; }
         #zone-a-3::before, #zone-b-3::before { content: "特殊"; }
@@ -88,7 +86,8 @@
         .map-unit.a { border-color: var(--cyan); color: var(--cyan); }
         .map-unit.b { border-color: var(--red); color: var(--red); }
         .map-unit.dead { opacity: 0.15; filter: grayscale(1); border-color: #334155; color: #64748b; }
-        .map-unit span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; font-weight: bold; }
+        
+        .map-unit span { white-space: normal; word-break: break-all; display: block; font-weight: bold; line-height: 1.1; max-height: 3em; overflow: hidden; }
         
         .m-bar-container { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
         .m-bar { height: 2px; background: #000; border-radius: 1px; width: 100%; display: flex; }
@@ -123,7 +122,7 @@
 </head>
 <body>
 
-    <h1>TACTICAL COMMAND DUAL Ver19.1</h1>
+    <h1>TACTICAL COMMAND DUAL Ver21.0</h1>
 
     <div class="layout">
         <div class="side-panel" id="side-panel">
@@ -170,7 +169,7 @@
                     <div id="list-a"></div>
                 </div>
                 <div class="log-area" id="log-area">
-                    <div style="color:var(--text-muted);">SYSTEM ONLINE. 兵科と命中システムを完全実装。</div>
+                    <div style="color:var(--text-muted);">SYSTEM ONLINE. 新データベース同期完了。</div>
                 </div>
                 <div class="panel list-area">
                     <div class="panel-title" id="title-b" style="color:var(--red); border-color:var(--red);">FORCE B</div>
@@ -213,28 +212,29 @@
             "粛清": "【特殊】味方部隊が敗走した際、生存者の半数を処刑し、士気を「無限」にして死ぬまで戦線に留まらせる。",
             "衛生兵": "【救護】攻撃の代わりに味方の気絶者を優先して治療する。ダイス出目の分だけHPを回復し、半分を超えると戦線復帰する。",
             "貫徹": "【特殊】敵の装甲を無視してダメージを与える。",
-            "重鈍": "【特殊】どれだけ機動力が高くても、全ユニットの最後に行動する。"
+            "重鈍": "【特殊】どれだけ機動力が高くても、全ユニットの最後に行動する。",
+            "塹壕構築": "【工作】通常・特殊行動時、最前衛の味方歩兵に「塹壕(+1装甲)」を構築する(最大+2)。無謀攻撃時は失敗率75%になる。"
         };
 
-        // ★ 追加: 新ステータス「兵科(type)」を全ユニットに定義
         const DATABASE = {
             "ラルキア国家社会主義人民共和国": {
-                "第〇歩兵大隊": { type: "歩兵", size: 600, cat: "最前衛部隊", morale: 50, agi: 30, arm: 0, hp: 10, fail: 40, gen: [1, 1], spc: [1, 3], reck: [1, 3], traits: ["革命万歳"] },
-                "第〇政治監査委員中隊": { type: "歩兵", size: 100, cat: "後援部隊", morale: 200, agi: 30, arm: 0, hp: 10, fail: 30, gen: [1, 1], spc: [1, 2], reck: [1, 2], traits: ["革命万歳", "粛清"] },
-                "第〇機動装甲中隊": { type: "軽戦車", size: 100, cat: "特殊部隊", morale: 100, agi: 80, arm: 3, hp: 10, fail: 50, gen: [1, 4], spc: [2, 3], reck: [3, 3], traits: ["革命万歳"] },
-                "第〇衛生中隊": { type: "歩兵", size: 100, cat: "後援部隊", morale: 100, agi: 80, arm: 0, hp: 10, fail: 10, gen: [2, 2], spc: [3, 3], reck: [4, 5], traits: ["衛生兵"] },
-                "第〇支援砲兵中隊": { type: "砲兵", size: 100, cat: "最後衛部隊", morale: 60, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 6], spc: [1, 8], reck: [1, 4], traits: ["貫徹"] }
+                "解放軍第〇歩兵大隊": { desc: "狂信的な歩兵大隊。装甲はないが突撃を繰り返す。", type: "歩兵", size: 600, cat: "最前衛部隊", morale: 50, agi: 30, arm: 0, hp: 10, fail: 40, gen: [1, 1], spc: [1, 3], reck: [1, 3], traits: ["革命万歳"] },
+                "解放軍第〇政治監査委員中隊": { desc: "逃亡を許さない。敗走部隊の半数を処刑する。", type: "歩兵", size: 100, cat: "後援部隊", morale: 200, agi: 30, arm: 0, hp: 10, fail: 30, gen: [1, 1], spc: [1, 2], reck: [1, 2], traits: ["革命万歳", "粛清"] },
+                "解放軍第〇機動装甲中隊": { desc: "高機動と重装甲を兼ね備えた特殊装甲部隊。", type: "軽戦車", size: 100, cat: "最前衛部隊", morale: 100, agi: 80, arm: 3, hp: 13, fail: 50, gen: [1, 4], spc: [1, 6], reck: [2, 3], traits: ["革命万歳"] },
+                "解放軍第〇衛生中隊": { desc: "救護部隊。衛生兵同士の救護は不可。", type: "歩兵", size: 100, cat: "後援部隊", morale: 100, agi: 80, arm: 0, hp: 10, fail: 10, gen: [2, 2], spc: [3, 3], reck: [4, 5], traits: ["衛生兵"] },
+                "解放軍第〇支援砲兵中隊": { desc: "装甲貫徹砲。敵の防護を無視する。", type: "砲兵", size: 100, cat: "最後衛部隊", morale: 60, agi: 0, arm: 0, hp: 5, fail: 60, gen: [1, 6], spc: [1, 8], reck: [1, 4], traits: ["貫徹"] }
             },
             "全土カルヴェナ革命戦線": {
-                "第〇革命パルチザン大隊": { type: "歩兵", size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 10, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] }
+                "革命軍事評議会第〇パルチザン大隊": { desc: "祖国解放を掲げる民兵大隊。装甲はないが数で押す。", type: "歩兵", size: 600, cat: "最前衛部隊", morale: 200, agi: 0, arm: 0, hp: 7, fail: 60, gen: [1, 2], spc: [1, 2], reck: [1, 5], traits: ["革命万歳"] },
+                "革命軍事評議会第○突撃工兵中隊": { desc: "ランダムな最前線歩兵に塹壕+1。無謀攻撃時は爆薬突撃。", type: "歩兵", size: 100, cat: "最前衛部隊", morale: 70, agi: 50, arm: 0, hp: 10, fail: 40, gen: [0, 0], spc: [0, 0], reck: [3, 5], traits: ["革命万歳", "塹壕構築"] }
             },
             "カルヴェナ帝国": {
-                "第〇正規歩兵大隊": { type: "歩兵", size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
-                "第〇帝立重装甲中隊": { type: "重戦車", size: 100, cat: "特殊部隊", morale: 250, agi: 10, arm: 6, hp: 10, fail: 30, gen: [1, 5], spc: [1, 6], reck: [1, 3], traits: ["皇帝陛下万歳", "貫徹", "重鈍"] }
+                "帝国軍第〇歩兵大隊": { desc: "規律正しい帝国歩兵。士気に強い。", type: "歩兵", size: 600, cat: "最前衛部隊", morale: 100, agi: 20, arm: 0, hp: 10, fail: 30, gen: [1, 2], spc: [1, 2], reck: [1, 3], traits: ["皇帝陛下万歳"] },
+                "帝国軍第〇帝立重装甲中隊": { desc: "鉄壁の重装甲。貫徹攻撃を持ち、最後に行動する。", type: "重戦車", size: 20, cat: "最前衛部隊", morale: 250, agi: 10, arm: 6, hp: 20, fail: 30, gen: [2, 5], spc: [1, 6], reck: [1, 3], traits: ["皇帝陛下万歳", "貫徹", "重鈍"] }
             }
         };
 
-        const WORKER_PRESET = { type: "歩兵", size: 100, cat: "最前衛部隊", morale: 50, agi: 0, arm: 0, hp: 7, fail: 65, gen: [1, 1], spc: [1, 1], reck: [2, 3], traits: ["革命万歳"] };
+        const WORKER_PRESET = { type: "歩兵", size: 100, cat: "最前衛部隊", morale: 50, agi: 0, arm: 0, hp: 5, fail: 65, gen: [1, 1], spc: [1, 1], reck: [2, 3], traits: ["革命万歳"] };
 
         class Unit {
             constructor(name, preset, affiliation, team, id) {
@@ -247,6 +247,7 @@
                 this.traits = preset.traits || [];
                 this.hpList = new Array(this.size).fill(this.hp);
                 this.statusList = new Array(this.size).fill(0); 
+                this.trench = 0; // 塹壕レベル
                 this.isRouted = false;
             }
             getActive() { return this.statusList.filter(s => s === 0).length; }
@@ -256,7 +257,7 @@
             
             takeDamage(dmg, isPiercing = false) {
                 if (!this.isAlive()) return { hit: false, killed: false };
-                let actualDmg = Math.min(Math.max(0, dmg - (isPiercing ? 0 : this.arm)), this.hp);
+                let actualDmg = Math.min(Math.max(0, dmg - (isPiercing ? 0 : (this.arm + this.trench))), this.hp);
                 let targets = []; for(let i=0; i<this.size; i++) if(this.statusList[i] >= 0) targets.push(i);
                 if(targets.length === 0) return { hit: false, killed: false };
                 let idx = targets[Math.floor(Math.random() * targets.length)];
@@ -315,11 +316,14 @@
                         traitsHtml = `<div class="trait-box"><span style="color:var(--cyan); font-weight:bold;">◆ 特性解説</span><ul>${traitItems}</ul></div>`;
                     }
 
-                    // ★ 修正: 配置場所（部隊を省く）と兵科を追加、8項目で綺麗に整列
                     let shortCat = data.cat.replace("部隊", "");
-                    html += `<details class="unit-details"><summary class="unit-summary">${key}</summary>
+                    let genTxt = data.gen[0] === 0 ? "なし" : `${data.gen[0]}D${data.gen[1]}`;
+                    let spcTxt = data.spc[0] === 0 ? "なし" : `${data.spc[0]}D${data.spc[1]}`;
+                    let recTxt = data.reck[0] === 0 ? "なし" : `${data.reck[0]}D${data.reck[1]}`;
+
+                    html += `<details class="unit-details"><summary class="unit-summary" style="font-size:10px;">${key}</summary>
                         <div class="preset-info">
-                            <div class="flavor-text">"${data.desc}"</div>
+                            <div style="font-style:italic; color:var(--cyan); margin-bottom:6px;">"${data.desc}"</div>
                             <div class="stat-grid">
                                 <div>配置: ${shortCat}</div><div>兵科: <span style="color:#fff;">${data.type}</span></div>
                                 <div>規模: ${data.size}</div><div>士気: ${data.morale}</div>
@@ -327,9 +331,9 @@
                                 <div>HP: ${data.hp}</div><div>失敗: ${data.fail}%</div>
                             </div>
                             <div class="stat-grid-atk">
-                                <div><span style="color:var(--text-muted)">通常</span><br>${data.gen[0]}D${data.gen[1]}</div>
-                                <div><span style="color:var(--cyan)">特殊</span><br>${data.spc[0]}D${data.spc[1]}</div>
-                                <div><span style="color:var(--red)">無謀</span><br>${data.reck[0]}D${data.reck[1]}</div>
+                                <div><span style="color:var(--text-muted)">通常</span><br>${genTxt}</div>
+                                <div><span style="color:var(--cyan)">特殊</span><br>${spcTxt}</div>
+                                <div><span style="color:var(--red)">無謀</span><br>${recTxt}</div>
                             </div>
                             ${traitsHtml}
                             <div class="ctrl-row">
@@ -353,8 +357,8 @@
             for(let i=0; i<c; i++){
                 let name = key.replace('〇', Math.floor(Math.random()*84)+1);
                 let u = new Unit(name, d, fac, team, `u${unitCounter++}`);
-                if(eq==='mg') { u.name+='(機銃)'; u.dice["特殊攻撃"][0]+=2; u.dice["特殊攻撃"][1]+=1; }
-                if(eq==='sp') { u.name+='(掘)'; u.arm+=1; u.agi-=50; }
+                if(eq==='mg') { u.name+=' (機銃)'; u.dice["特殊攻撃"][0]+=2; u.dice["特殊攻撃"][1]+=1; }
+                if(eq==='sp') { u.name+=' (掘)'; u.arm+=1; u.agi-=50; }
                 teams[team].push(u);
             }
             updateUI();
@@ -383,10 +387,12 @@
                         else if(u.isRouted) { statusText = "敗走"; statusColor = "var(--red)"; }
                         else if(u.max_morale === "/") { statusText = "死守"; statusColor = "var(--red)"; }
 
+                        let trenchText = u.trench > 0 ? ` <span style="color:var(--yellow); font-size:10px;">[塹壕+${u.trench}]</span>` : "";
+
                         list.innerHTML += `
                         <div class="unit-card ${tid.toLowerCase()}" style="${u.isAlive()?'':'opacity:0.4; filter:grayscale(0.8);'}">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                                <span style="font-weight:bold; font-size:12px;">${u.name}</span>
+                                <span style="font-weight:bold; font-size:11px;">${u.name}${trenchText}</span>
                                 <div>
                                     <span style="color:${statusColor}; font-weight:bold; margin-right:8px;">${statusText}</span>
                                     <button style="display:${isBattling?'none':'inline-block'}; color:var(--red); background:none; border:none; cursor:pointer; font-size:12px;" onclick="removeUnit('${tid}','${u.id}')">✖</button>
@@ -417,16 +423,17 @@
                 let s = u.team.toLowerCase(); let zId = `zone-${s}-${CAT_TO_ZONE[u.category]}`;
                 let countInZone = zoneCounts[zId];
                 
-                let h = countInZone > 30 ? "16px" : (countInZone > 15 ? "22px" : "32px");
-                let fz = countInZone > 30 ? "6px" : (countInZone > 15 ? "7px" : "9px");
+                let h = countInZone > 30 ? "20px" : (countInZone > 15 ? "28px" : "36px");
+                let fz = countInZone > 30 ? "6px" : (countInZone > 15 ? "7px" : "8px");
 
                 let aPct = (u.getActive()/u.size)*100;
                 let fPct = (u.getFaint()/u.size)*100;
                 let mP = u.max_morale==="/"?100:Math.max(0,(u.morale/u.max_morale)*100);
+                let trenchText = u.trench > 0 ? ` <span style="color:var(--yellow); font-size:0.9em;">(塹+${u.trench})</span>` : "";
                 
                 document.getElementById(zId).innerHTML += `
-                    <div class="map-unit ${s} ${u.isAlive()?'':'dead'}" id="map-${u.id}" style="min-height:${h}; font-size:${fz}; padding:1px;">
-                        <span>${u.name}</span>
+                    <div class="map-unit ${s} ${u.isAlive()?'':'dead'}" id="map-${u.id}" style="min-height:${h}; font-size:${fz}; padding:2px;">
+                        <span>${u.name}${trenchText}</span>
                         <div class="m-bar-container">
                             <div class="m-bar"><div class="m-fill-hp" style="width:${aPct}%"></div><div class="m-fill-faint" style="width:${fPct}%"></div></div>
                             <div class="m-bar"><div class="m-fill-mor" style="width:${mP}%"></div></div>
@@ -506,7 +513,7 @@
             if (inciteCheckbox && inciteCheckbox.checked && turn % 2 === 0) {
                 ["A", "B"].forEach(side => {
                     if (teams[side].some(u => u.affiliation === "全土カルヴェナ革命戦線")) {
-                        let name = `第${Math.floor(Math.random()*84)+1}労働者中隊`;
+                        let name = `革命軍事評議会第${Math.floor(Math.random()*84)+1}革命労働者中隊`;
                         teams[side].push(new Unit(name, WORKER_PRESET, "全土カルヴェナ革命戦線", side, `u_i_${unitCounter++}`));
                         log(`📢【扇動】${side}軍に ${name} 到着！`); playSfx('heal');
                     }
@@ -524,8 +531,14 @@
 
             for (let atk of actionList) {
                 if(!atk.isAlive()) continue;
-                let isM = atk.traits.includes('衛生兵'), isP = atk.traits.includes('貫徹'), target;
-                if(isM) {
+                let isM = atk.traits.includes('衛生兵'), isP = atk.traits.includes('貫徹'), isTrenchBuilder = atk.traits.includes('塹壕構築'), target;
+                let rollV = roll(6), type = rollV===1?"特殊":(rollV===6?"無謀":"通常");
+
+                // 対象の決定
+                if (isTrenchBuilder && (type === "通常" || type === "特殊")) {
+                    let allies = teams[atk.team].filter(u => u.isAlive() && u.category.includes('最前衛') && u.type === '歩兵' && u.trench < 2);
+                    if(allies.length > 0) target = allies[Math.floor(Math.random()*allies.length)];
+                } else if(isM) {
                     let allies = teams[atk.team].filter(u => u.isAlive() && !u.traits.includes('衛生兵') && u.getFaint() > 0);
                     if(!allies.length) allies = teams[atk.team].filter(u => u.isAlive() && !u.traits.includes('衛生兵') && u !== atk);
                     target = allies[Math.floor(Math.random()*allies.length)];
@@ -533,43 +546,65 @@
                     let enemies = teams[atk.team==='A'?'B':'A'].filter(u => u.isAlive());
                     target = enemies[Math.floor(Math.random()*enemies.length)];
                 }
-                if(!target) continue;
 
-                let rollV = roll(6), type = rollV===1?"特殊":(rollV===6?"無謀":"通常");
-                let [dN, dS] = atk.dice[type==="通常"?"通常攻撃":(type==="特殊"?"特殊攻撃":"無謀な攻撃")];
-                let hits = 0, misses = 0, kills = 0, revs = 0, selfK = 0, count = atk.getActive();
-
-                for(let i=0; i<count; i++){
-                    // ★命中失敗の判定（ここで外れた場合はダメージ計算を行わない）
-                    if (roll100() <= atk.fail) {
-                        misses++;
-                        if (type === "無謀" && roll100() > 50) selfK++; // 無謀の場合は外れても自傷リスク
-                        continue;
+                if(!target) {
+                    if (isTrenchBuilder && (type === "通常" || type === "特殊")) {
+                        log(`[${atk.name}] ${type} -> 工作活動<br>&nbsp;&nbsp;└ <span style="color:var(--gray)">構築対象なし</span>`, 'log-dmg');
                     }
-                    
-                    let d = 0; for(let j=0; j<dN; j++) d += roll(dS);
-                    if(isM){ 
-                        if(target.receiveHealing(d)) revs++; 
-                        if(type==="無謀" && atk.takeDamage(Math.floor(d*0.3)).killed) selfK++; 
-                    } else {
-                        let res = target.takeDamage(d, isP);
-                        if(res.hit) hits++; if(res.killed) kills++;
-                        if(type==="無謀" && atk.takeDamage(Math.floor(d*0.3)).killed) selfK++;
+                    continue; 
+                }
+
+                let hits = 0, misses = 0, kills = 0, revs = 0, selfK = 0, count = atk.getActive();
+                let isBuild = isTrenchBuilder && (type === "通常" || type === "特殊");
+
+                if (isBuild) {
+                    target.trench += 1;
+                } else {
+                    for(let i=0; i<count; i++){
+                        let currentFail = atk.fail;
+                        if (isTrenchBuilder && type === "無謀") currentFail = 75;
+
+                        if (roll100() <= currentFail) {
+                            misses++;
+                            if (type === "無謀" && roll100() > 50) selfK++; 
+                            continue;
+                        }
+                        
+                        let [dN, dS] = atk.dice[type==="通常"?"通常攻撃":(type==="特殊"?"特殊攻撃":"無謀な攻撃")];
+                        let d = 0; for(let j=0; j<dN; j++) d += roll(dS);
+                        if(isM){ 
+                            if(target.receiveHealing(d)) revs++; 
+                            if(type==="無謀" && atk.takeDamage(Math.floor(d*0.3)).killed) selfK++; 
+                        } else {
+                            let res = target.takeDamage(d, isP);
+                            if(res.hit) hits++; if(res.killed) kills++;
+                            if(type==="無謀" && atk.takeDamage(Math.floor(d*0.3)).killed) selfK++;
+                        }
                     }
                 }
 
                 const aEl = document.getElementById(`map-${atk.id}`), tEl = document.getElementById(`map-${target.id}`);
-                if(aEl) aEl.classList.add('anim-atk'); if(tEl && hits > 0) tEl.classList.add(isM?'anim-heal':'anim-def');
-                drawAttackLine(atk.id, target.id, isM ? 'heal' : 'atk');
+                if(aEl) aEl.classList.add('anim-atk'); 
                 
-                if (isM) { playSfx('heal'); } 
-                else if (hits === 0 && misses > 0) { playSfx('miss'); } // 全弾ミスの時の風切り音
+                if(tEl && (hits > 0 || isBuild || revs > 0)) tEl.classList.add((isM || isBuild)?'anim-heal':'anim-def');
+                drawAttackLine(atk.id, target.id, (isM || isBuild) ? 'heal' : 'atk');
+                
+                if (isBuild) { playSfx('heal'); }
+                else if (isM) { playSfx('heal'); } 
+                else if (hits === 0 && misses > 0) { playSfx('miss'); }
                 else { if (isP) playSfx('pierce'); else playSfx('hit'); }
 
                 await sleep(350);
-                if(aEl) aEl.classList.remove('anim-atk'); if(tEl) tEl.classList.remove(isM?'anim-heal':'anim-def');
+                if(aEl) aEl.classList.remove('anim-atk'); if(tEl) tEl.classList.remove('anim-heal', 'anim-def');
 
-                let resTxt = isM ? `<span style="color:var(--green)">復帰:${revs}</span> / ミス:${misses}` : `有効:${hits} / <span style="color:var(--orange)">ミス:${misses}</span> / <span class="log-fatal">死:${kills}</span>`;
+                let resTxt = "";
+                if (isBuild) {
+                    resTxt = `<span style="color:var(--yellow)">塹壕(+1)構築完了</span>`;
+                } else if (isM) {
+                    resTxt = `<span style="color:var(--green)">復帰:${revs}</span> / ミス:${misses}`;
+                } else {
+                    resTxt = `有効:${hits} / <span style="color:var(--orange)">ミス:${misses}</span> / <span class="log-fatal">死:${kills}</span>`;
+                }
                 if(selfK>0) resTxt += ` | 自損:${selfK}`;
                 log(`[${atk.name}] ${type} -> [${target.name}]<br>&nbsp;&nbsp;└ ${resTxt}`, 'log-dmg');
                 updateUI();
@@ -592,7 +627,7 @@
             let winA = teams.B.every(u => !u.isAlive()), winB = teams.A.every(u => !u.isAlive());
             if(winA || winB){ 
                 autoMode = false; playSfx('win'); log(`🏆 終結: ${winA?'FORCE A':'FORCE B'}の勝利！`, 'log-turn'); 
-                document.getElementById("btn-next").disabled = true; document.getElementById("btn-auto").disabled = true; // ★ 戦闘終了後ロック
+                document.getElementById("btn-next").disabled = true; document.getElementById("btn-auto").disabled = true;
                 return; 
             }
             if(autoMode) setTimeout(runTurn, 400); else document.getElementById("btn-next").disabled = false;
